@@ -1,11 +1,15 @@
 return -> - ++ identifier
-1 2.3 4.5 123.0
+1 2.3 45 123.0.
 "sexy string"
-'c' 'a'
+'c'
 
-(i8 x, u16 y) -> i8
-main {
-    z = x + y
+(int x, int y) -> int
+func main {
+    float z = x + y
+
+    while (z > 0) {
+        z = z - 1
+    }
 
     return z;
 }

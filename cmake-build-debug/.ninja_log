@@ -37,3 +37,15 @@
 1862	2219	7569110423632464	projects.exe	394c87afc502aa78
 6	1615	7569110861725602	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94
 1615	1914	7569110877805880	projects.exe	394c87afc502aa78
+10	1782	7569301518767202	CMakeFiles/projects.dir/src/Compiler.cpp.obj	ccc3bf92666913c4
+19	1791	7569301518857234	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
+16	2308	7569301518827208	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94
+2308	2709	7569301541747212	projects.exe	394c87afc502aa78
+14	1484	7569307982423037	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
+5	1487	7569307982343397	CMakeFiles/projects.dir/src/Compiler.cpp.obj	ccc3bf92666913c4
+10	1975	7569307982383034	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94
+1976	2288	7569308002043041	projects.exe	394c87afc502aa78
+6	1323	7569308445256436	CMakeFiles/projects.dir/src/Compiler.cpp.obj	ccc3bf92666913c4
+13	1332	7569308445326094	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
+10	1839	7569308445296150	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94
+1839	2134	7569308463591199	projects.exe	394c87afc502aa78

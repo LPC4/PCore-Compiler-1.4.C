@@ -1,4 +1,13 @@
 "E:\Utility\code\CLion 2024.3.1.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=E:/Utility/code/CLion 2024.3.1.1/bin/ninja/win/x64/ninja.exe" -G Ninja -S E:\Utility\code\projects -B E:\Utility\code\projects\cmake-build-debug
--- Configuring done (0.3s)
--- Generating done (0.0s)
--- Build files have been written to: E:/Utility/code/projects/cmake-build-debug
+-- Configuring done (0.5s)
+CMake Error at CMakeLists.txt:9 (add_executable):
+  Cannot find source file:
+
+    include/Errors.h
+
+
+CMake Error at CMakeLists.txt:9 (add_executable):
+  No SOURCES given to target: projects
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

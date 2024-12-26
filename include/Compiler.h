@@ -2,6 +2,7 @@
 #include <string>
 
 #include "Tokenizer.h"
+#include "Parser.h"
 
 class Compiler {
 public:
@@ -13,4 +14,5 @@ private:
     std::string m_author;
 
     Tokenizer m_tokenizer;
+    Parser m_parser;
 };
