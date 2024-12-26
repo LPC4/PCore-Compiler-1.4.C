@@ -3,7 +3,7 @@ project(projects)
 
 set(CMAKE_CXX_STANDARD 23)
 
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "include/*.h")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 add_executable(projects ${SOURCES} ${HEADERS})

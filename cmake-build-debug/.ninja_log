@@ -1,9 +1,9 @@
 # ninja log v6
+6	776	7569405233531119	CMakeFiles/projects.dir/src/ast/AbstractSyntaxTree.cpp.obj	aaf9a42bbad8bf4e
 19	597	7566896930636114	CMakeFiles/projects.dir/main.cpp.obj	f563fa03f954b9c1
-1318	1791	7569335026142971	projects.exe	f3a279b9097d7212
-10	1241	7569335013072978	CMakeFiles/projects.dir/src/Parser.cpp.obj	303d6e78f6bd1947
-2	253	7569335182943878	build.ninja	53b31b2e0213f132
-14	1317	7569335013102974	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
-6	1317	7569335013022976	CMakeFiles/projects.dir/src/Compiler.cpp.obj	ccc3bf92666913c4
-14	1808	7569333488383456	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94
-3	243	7569335182943878	build.ninja	53b31b2e0213f132
+778	1072	7569405241251124	projects.exe	7150117b99b35f35
+10	1096	7569404048992343	CMakeFiles/projects.dir/src/Parser.cpp.obj	303d6e78f6bd1947
+3	238	7569405617194554	build.ninja	53b31b2e0213f132
+13	1185	7569404049022073	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
+5	1173	7569404048952328	CMakeFiles/projects.dir/src/Compiler.cpp.obj	ccc3bf92666913c4
+13	1736	7569403599546147	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94

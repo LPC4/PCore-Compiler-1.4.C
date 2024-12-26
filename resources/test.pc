@@ -1,14 +1,11 @@
-return -> - ++ identifier
-1 2.3 45 123.0
-"sexy string"
-'c'
+program test;
 
 (int x, int y) -> int
 func main {
-    float z = x + y
+    float z = x + y;
 
     while (z > 0) {
-        z = z - 1
+        z = z - 1;
     }
 
     return z;

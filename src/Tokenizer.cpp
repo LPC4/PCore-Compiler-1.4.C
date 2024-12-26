@@ -4,9 +4,6 @@
 #include <set>
 #include <stdexcept>
 
-// Tokenizer
-Tokenizer::Tokenizer(const std::string &filepath) : m_filepath(filepath) {}
-
 const std::set<std::string> KEYWORDS = {"if", "else", "while", "return", "break", "continue", "import", "program"};
 
 const std::set<char> SYMBOLS = {'+', '-', '*', '/', '=', '!', '<', '>', '(', ')', '{', '}',
@@ -15,6 +12,8 @@ const std::set<char> SYMBOLS = {'+', '-', '*', '/', '=', '!', '<', '>', '(', ')'
 const std::set<std::string> LONG_SYMBOLS = {"==", "!=", "<=", ">=", "&&", "||", "->"};
 
 const std::set<char> WHITESPACE = {' ', '\t', '\n', '\r', '\0'};
+
+Tokenizer::Tokenizer(const std::string &filepath) : m_filepath(filepath) {}
 
 auto Tokenizer::tokenize() -> std::vector<Token> {
     m_source = readSource();
@@ -168,28 +167,13 @@ auto Tokenizer::readSource() const -> std::string {
         }
     } else {
         throw std::runtime_error("Failed to open file: " + m_filepath.string() +
-                                 " (resolved path: " + std::filesystem::absolute(m_filepath).string() + ")");
+                                 " (resolved path: " + absolute(m_filepath).string() + ")");
     }
 
     return source;
 }
 
-// Token
 Token::Token(std::string value, const TokenType type, const Position position) :
     m_type(type), m_value(std::move(value)), m_position(position) {}
 
-// Position
 Position::Position(const unsigned int line, const unsigned int column) : m_line(line), m_column(column) {}
-
-// Getters
-auto Tokenizer::getTokens() const -> const std::vector<Token> & { return m_tokens; }
-
-auto Token::getType() const -> TokenType { return m_type; }
-
-auto Token::getValue() const -> const std::string & { return m_value; }
-
-auto Token::getPosition() const -> const Position & { return m_position; }
-
-auto Position::getLine() const -> unsigned int { return m_line; }
-
-auto Position::getColumn() const -> unsigned int { return m_column; }

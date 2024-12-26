@@ -18,12 +18,7 @@ private:
     // Parsing functions for various constructs
     void parseProgram();
     void parseStatement();
-    void parseExpression();
-    void parseAssignment();
-    void parseFunctionCall();
-    void parseControlFlow();
-    void parseLoop();
-    void parseReturn();
+
 
     // Utility functions
     void advance();
@@ -80,12 +75,12 @@ inline auto Parser::peekPrevious() const -> Token { return m_tokens[m_current_in
 inline auto Parser::isAtEnd() const -> bool { return m_current_index >= m_tokens.size(); }
 
 inline void Parser::advance() {
-    if (!isAtEnd()) {
-        ++m_current_index;
-    }
+    isAtEnd() ? throwError("Parser: cannot advance past end of token stream") : (void) m_current_index++;
 }
 
-inline auto Parser::match(const TokenType type) const -> bool { return !isAtEnd() && m_tokens[m_current_index].getType() == type; }
+inline auto Parser::match(const TokenType type) const -> bool {
+    return !isAtEnd() && m_tokens[m_current_index].getType() == type;
+}
 
 inline auto Parser::match(const std::string &value) const -> bool {
     return !isAtEnd() && m_tokens[m_current_index].getValue() == value;
@@ -96,27 +91,17 @@ inline auto Parser::match(const TokenType type, const std::string &value) const 
 }
 
 inline void Parser::consume(const TokenType type) {
-    if (match(type)) {
-        advance();
-    } else {
-        throwError("Parser: expected token of type " + tokenTypeToString(type));
-    }
+    match(type) ? advance() : throwError("Parser: expected token of type " + tokenTypeToString(type));
 }
 
 inline void Parser::consume(const std::string &value) {
-    if (match(value)) {
-        advance();
-    } else {
-        throwError("Parser: expected token with value " + value);
-    }
+    match(value) ? advance() : throwError("Parser: expected token with value " + value);
 }
 
 inline void Parser::consume(TokenType type, const std::string &value) {
-    if (match(type, value)) {
-        advance();
-    } else {
-        throwError("Parser: expected token of type " + tokenTypeToString(type) + " with value " + value);
-    }
+    match(type, value)
+            ? advance()
+            : throwError("Parser: expected token of type " + tokenTypeToString(type) + " with value " + value);
 }
 
 inline void Parser::throwError(const std::string &message) { throw std::runtime_error("Parse error: " + message); }

@@ -50,18 +50,6 @@ public:
 
     auto tokenize() -> std::vector<Token>;
 
-    void handleWhiteSpace();
-    void handleKeyword();
-    void handleSymbol();
-    void handleStringOrChar();
-    void handleNumber();
-    void handleIdentifierOrKeyword();
-
-    void advance();
-    void addToken(TokenType type, const std::string &value);
-    void throwError(const std::string &message) const;
-
-    [[nodiscard]] auto readSource() const -> std::string;
     [[nodiscard]] auto getTokens() const -> const std::vector<Token> &;
 
 private:
@@ -74,4 +62,29 @@ private:
 
     unsigned int m_line = 1;
     unsigned int m_column = 1;
+
+    void handleWhiteSpace();
+    void handleKeyword();
+    void handleSymbol();
+    void handleStringOrChar();
+    void handleNumber();
+    void handleIdentifierOrKeyword();
+
+    void advance();
+    void addToken(TokenType type, const std::string &value);
+    void throwError(const std::string &message) const;
+
+    [[nodiscard]] auto readSource() const -> std::string;
 };
+
+inline auto Tokenizer::getTokens() const -> const std::vector<Token> & { return m_tokens; }
+
+inline auto Token::getType() const -> TokenType { return m_type; }
+
+inline auto Token::getValue() const -> const std::string & { return m_value; }
+
+inline auto Token::getPosition() const -> const Position & { return m_position; }
+
+inline auto Position::getLine() const -> unsigned int { return m_line; }
+
+inline auto Position::getColumn() const -> unsigned int { return m_column; }
