@@ -1,0 +1,20 @@
+return -> - ++ identifier
+1 2.3 4.5 123.0
+"sexy string"
+'c' 'a'
+
+(i8 x, u16 y) -> i8
+main {
+    z = x + y
+
+    return z;
+}
+
+
+
+
+
+
+
+
+
