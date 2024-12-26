@@ -1,5 +1,5 @@
 return -> - ++ identifier
-1 2.3 45 123.0.
+1 2.3 45 123.0
 "sexy string"
 'c'
 

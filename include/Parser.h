@@ -9,7 +9,7 @@ public:
     Parser();
 
     // Main parse function
-    void parse(const std::vector<Token> &tokens);
+    void parse(std::vector<Token> tokens);
 
 private:
     std::vector<Token> m_tokens;     // Vector to hold tokens
