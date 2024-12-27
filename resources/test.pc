@@ -2,13 +2,13 @@ program test;
 
 (int x, int y) -> int
 func main {
-    float z = x + y;
+    // float z = x + y;
 
-    while (z > 0) {
-        z = z - 1;
-    }
+    // while (z > 0) {
+    //    z = z - 1;
+    // }
 
-    return z;
+    // return z;
 }
 
 

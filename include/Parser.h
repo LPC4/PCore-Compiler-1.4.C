@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "Tokenizer.h"
+#include "ast/AbstractSyntaxTree.h"
 
 class Parser {
 public:
@@ -16,11 +17,21 @@ private:
     std::size_t m_current_index = 0; // Current index in the token vector
 
     // Parsing functions for various constructs
-    void parseProgram();
-    void parseStatement();
+    Program parseProgram();
+    std::unique_ptr<ASTNode> parseStatement();
+    std::unique_ptr<ASTNode> parseBlock();
+    std::unique_ptr<ASTNode> parseIfStatement();
+    std::unique_ptr<ASTNode> parseWhileLoop();
+    std::unique_ptr<ASTNode> parseReturnStatement();
+    std::unique_ptr<ASTNode> parseExpressionStatement();
+    std::unique_ptr<ASTNode> parseAssignment();
+    std::unique_ptr<ASTNode> parseFunctionCall();
+    std::unique_ptr<FunctionDeclaration> parseFunctionDeclaration();
+    std::unique_ptr<ASTNode> parseBinaryOperation();
+    std::unique_ptr<ASTNode> parsePrimary();
 
+    // ------------------ Parsing Functions ------------------ //
 
-    // Utility functions
     void advance();
 
     // Advances if the current token matches, otherwise throws an error
@@ -29,7 +40,7 @@ private:
     void consume(TokenType type, const std::string &value);
 
     // Throw an error with a specific message
-    void throwError(const std::string &message);
+    void throwError(const std::string &message) const;
 
     // Returns true if the current token matches
     [[nodiscard]] bool match(TokenType type) const;
@@ -75,7 +86,11 @@ inline auto Parser::peekPrevious() const -> Token { return m_tokens[m_current_in
 inline auto Parser::isAtEnd() const -> bool { return m_current_index >= m_tokens.size(); }
 
 inline void Parser::advance() {
-    isAtEnd() ? throwError("Parser: cannot advance past end of token stream") : (void) m_current_index++;
+    if (isAtEnd()) {
+        throwError("Parser: cannot advance past end of token stream");
+    } else {
+        ++m_current_index;
+    }
 }
 
 inline auto Parser::match(const TokenType type) const -> bool {
@@ -104,4 +119,8 @@ inline void Parser::consume(TokenType type, const std::string &value) {
             : throwError("Parser: expected token of type " + tokenTypeToString(type) + " with value " + value);
 }
 
-inline void Parser::throwError(const std::string &message) { throw std::runtime_error("Parse error: " + message); }
+inline void Parser::throwError(const std::string &message) const {
+    throw std::runtime_error("Parse error: " + message + " at line " + std::to_string(peek().getPosition().getLine()) +
+                             " column " + std::to_string(peek().getPosition().getColumn()) +
+                             " (token: " + peek().getValue() + ")");
+}

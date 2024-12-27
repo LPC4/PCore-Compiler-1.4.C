@@ -1,10 +1,11 @@
 #include "../include/Tokenizer.h"
 
 #include <fstream>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 
-const std::set<std::string> KEYWORDS = {"if", "else", "while", "return", "break", "continue", "import", "program"};
+const std::set<std::string> KEYWORDS = {"if", "else", "while", "return", "break", "continue", "import", "program", "func"};
 
 const std::set<char> SYMBOLS = {'+', '-', '*', '/', '=', '!', '<', '>', '(', ')', '{', '}',
                                 '[', ']', ';', ',', '.', ':', '&', '|', '^', '~', '.'};
@@ -70,6 +71,14 @@ void Tokenizer::handleSymbol() {
     // check if it's a 2 character symbol
     if (m_current_index + 1 <= m_max_index) {
         symbol = m_source.substr(m_current_index, 2);
+
+        // handle comments
+        if (symbol == "//") {
+            while (m_source[m_current_index] != '\n') {
+                advance();
+            }
+            return;
+        }
 
         if (LONG_SYMBOLS.contains(symbol)) {
             addToken(TokenType::Symbol, symbol);

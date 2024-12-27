@@ -9,4 +9,6 @@ Compiler::Compiler(std::string name, std::string version, std::string author, co
     for (const Token &token : tokens) {
         printf("Token: %s\n", token.getValue().c_str());
     }
+
+    m_parser.parse(tokens);
 }
