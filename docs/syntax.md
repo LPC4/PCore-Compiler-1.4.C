@@ -6,7 +6,6 @@
   ```c++
   program main
   
-  () -> void
   main {
       print("Hello, World!");
   }
@@ -43,7 +42,7 @@
 - Example:
   ```c++
   (int x, int y) -> int 
-  add {
+  func add {
       return x + y;
   }
     
