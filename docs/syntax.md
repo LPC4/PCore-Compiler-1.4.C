@@ -56,7 +56,7 @@
 ## 5. Control Flow
 - `if-else`:
   ```c++
-  if (condition) {
+  if condition {
       // True block
   } else {
       // False block
@@ -64,7 +64,7 @@
   ```
 - `while` loop:
   ```c++
-  while (condition) {
+  while condition {
       // Loop body
   }
   ```

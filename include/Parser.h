@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include "Tokenizer.h"
@@ -13,24 +14,26 @@ public:
     void parse(std::vector<Token> tokens);
 
 private:
-    std::vector<Token> m_tokens;     // Vector to hold tokens
-    std::size_t m_current_index = 0; // Current index in the token vector
+    std::vector<Token> m_tokens;
+    std::size_t        m_current_index = 0;
 
-    // Parsing functions for various constructs
-    Program parseProgram();
-    std::unique_ptr<ASTNode> parseStatement();
-    std::unique_ptr<ASTNode> parseBlock();
-    std::unique_ptr<ASTNode> parseIfStatement();
-    std::unique_ptr<ASTNode> parseWhileLoop();
-    std::unique_ptr<ASTNode> parseReturnStatement();
-    std::unique_ptr<ASTNode> parseExpressionStatement();
-    std::unique_ptr<ASTNode> parseAssignment();
-    std::unique_ptr<ASTNode> parseFunctionCall();
-    std::unique_ptr<FunctionDeclaration> parseFunctionDeclaration();
-    std::unique_ptr<ASTNode> parseBinaryOperation();
-    std::unique_ptr<ASTNode> parsePrimary();
+    // --------------------- Parsing functions --------------------- //
 
-    // ------------------ Parsing Functions ------------------ //
+    std::unique_ptr<Program>                   parseProgram();
+    std::unique_ptr<AbstractNode>              parseDeclaration();
+    std::unique_ptr<AbstractNode>              parseStatement();
+    std::vector<std::unique_ptr<AbstractNode>> parseBlock();
+    std::unique_ptr<IfStatement>               parseIfStatement();
+    std::unique_ptr<WhileLoop>                 parseWhileLoop();
+    std::unique_ptr<ReturnStatement>           parseReturnStatement();
+    std::unique_ptr<ExpressionStatement>       parseExpressionStatement();
+    std::unique_ptr<VariableDeclaration>       parseVariableDeclaration();
+    std::unique_ptr<FunctionCall>              parseFunctionCall();
+    std::unique_ptr<FunctionDeclaration>       parseFunctionDeclaration();
+    std::unique_ptr<BinaryOperation>           parseBinaryOperation();
+    std::unique_ptr<Assignment>                parseAssignment();
+
+    // ------------------ Parsing Helper Functions ------------------ //
 
     void advance();
 
@@ -39,7 +42,6 @@ private:
     void consume(const std::string &value);
     void consume(TokenType type, const std::string &value);
 
-    // Throw an error with a specific message
     void throwError(const std::string &message) const;
 
     // Returns true if the current token matches
@@ -47,35 +49,16 @@ private:
     [[nodiscard]] bool match(const std::string &value) const;
     [[nodiscard]] bool match(TokenType type, const std::string &value) const;
 
-    // Returns the current token
-    [[nodiscard]] Token peek() const;
-    [[nodiscard]] Token peekNext() const;
-    [[nodiscard]] Token peekPrevious() const;
+    // Returns tokens without advancing
+    [[nodiscard]] Token              peek() const;
+    [[nodiscard]] Token              peekNext() const;
+    [[nodiscard]] Token              peekPrevious() const;
+    [[nodiscard]] std::vector<Token> peekUntilEOL();
 
-    // Check if the end of the token stream is reached
     [[nodiscard]] bool isAtEnd() const;
-};
 
-inline auto tokenTypeToString(const TokenType type) -> std::string {
-    switch (type) {
-        case TokenType::Identifier:
-            return "Identifier";
-        case TokenType::Integer:
-            return "Integer";
-        case TokenType::Float:
-            return "Float";
-        case TokenType::String:
-            return "String";
-        case TokenType::Char:
-            return "Char";
-        case TokenType::Keyword:
-            return "Keyword";
-        case TokenType::Symbol:
-            return "Symbol";
-        default:
-            return "Unknown";
-    }
-}
+    [[nodiscard]] static bool isBinaryOperation(const std::vector<Token> &line);
+};
 
 inline auto Parser::peek() const -> Token { return m_tokens[m_current_index]; }
 
@@ -83,7 +66,17 @@ inline auto Parser::peekNext() const -> Token { return m_tokens[m_current_index 
 
 inline auto Parser::peekPrevious() const -> Token { return m_tokens[m_current_index - 1]; }
 
-inline auto Parser::isAtEnd() const -> bool { return m_current_index >= m_tokens.size(); }
+inline auto Parser::peekUntilEOL() -> std::vector<Token> {
+    std::vector<Token> tokens;
+    const std::size_t  index = m_current_index;
+
+    while (!isAtEnd() && peek().getValue() != ";") {
+        tokens.push_back(peek());
+        ++m_current_index;
+    }
+    m_current_index = index;
+    return tokens;
+}
 
 inline void Parser::advance() {
     if (isAtEnd()) {
@@ -92,6 +85,8 @@ inline void Parser::advance() {
         ++m_current_index;
     }
 }
+
+inline auto Parser::isAtEnd() const -> bool { return m_current_index >= m_tokens.size(); }
 
 inline auto Parser::match(const TokenType type) const -> bool {
     return !isAtEnd() && m_tokens[m_current_index].getType() == type;
@@ -123,4 +118,10 @@ inline void Parser::throwError(const std::string &message) const {
     throw std::runtime_error("Parse error: " + message + " at line " + std::to_string(peek().getPosition().getLine()) +
                              " column " + std::to_string(peek().getPosition().getColumn()) +
                              " (token: " + peek().getValue() + ")");
+}
+
+inline auto Parser::isBinaryOperation(const std::vector<Token>& line) -> bool {
+    return std::ranges::any_of(line, [](const Token& token) {
+        return BINARY_OPERATORS.contains(token.getValue());
+    });
 }

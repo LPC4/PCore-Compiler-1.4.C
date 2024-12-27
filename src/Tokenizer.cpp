@@ -5,15 +5,6 @@
 #include <set>
 #include <stdexcept>
 
-const std::set<std::string> KEYWORDS = {"if", "else", "while", "return", "break", "continue", "import", "program", "func"};
-
-const std::set<char> SYMBOLS = {'+', '-', '*', '/', '=', '!', '<', '>', '(', ')', '{', '}',
-                                '[', ']', ';', ',', '.', ':', '&', '|', '^', '~', '.'};
-
-const std::set<std::string> LONG_SYMBOLS = {"==", "!=", "<=", ">=", "&&", "||", "->"};
-
-const std::set<char> WHITESPACE = {' ', '\t', '\n', '\r', '\0'};
-
 Tokenizer::Tokenizer(const std::string &filepath) : m_filepath(filepath) {}
 
 auto Tokenizer::tokenize() -> std::vector<Token> {
@@ -23,7 +14,7 @@ auto Tokenizer::tokenize() -> std::vector<Token> {
     m_max_index = m_source.size();
     m_current_index = 0;
 
-    while (m_current_index <= m_max_index) {
+    while (m_current_index < m_max_index) {
         char currentChar = m_source[m_current_index];
 
         if (WHITESPACE.contains(currentChar)) {
@@ -45,36 +36,32 @@ auto Tokenizer::tokenize() -> std::vector<Token> {
 }
 
 void Tokenizer::handleWhiteSpace() {
-    while (WHITESPACE.contains(m_source[m_current_index])) {
+    while (m_current_index < m_max_index && WHITESPACE.contains(m_source[m_current_index])) {
         if (m_source[m_current_index] == '\n') {
             m_line++;
             m_column = 1;
-            m_current_index++;
         } else {
-            advance();
+            m_column++;
         }
+        m_current_index++;
     }
 }
 
 void Tokenizer::handleKeyword() {
     std::string keyword;
-    while (isalpha(m_source[m_current_index])) {
+    while (m_current_index < m_max_index && isalpha(m_source[m_current_index])) {
         keyword += m_source[m_current_index];
         advance();
     }
-
     addToken(TokenType::Keyword, keyword);
 }
 
 void Tokenizer::handleSymbol() {
-    std::string symbol;
-    // check if it's a 2 character symbol
-    if (m_current_index + 1 <= m_max_index) {
-        symbol = m_source.substr(m_current_index, 2);
+    if (m_current_index + 1 < m_max_index) {
+        const std::string symbol = m_source.substr(m_current_index, 2);
 
-        // handle comments
         if (symbol == "//") {
-            while (m_source[m_current_index] != '\n') {
+            while (m_current_index < m_max_index && m_source[m_current_index] != '\n') {
                 advance();
             }
             return;
@@ -88,23 +75,26 @@ void Tokenizer::handleSymbol() {
         }
     }
 
-    // single character symbol
-    symbol = m_source[m_current_index];
+    std::string symbol(1, m_source[m_current_index]);
     addToken(TokenType::Symbol, symbol);
     advance();
 }
 
 void Tokenizer::handleStringOrChar() {
     std::string value;
-    const char quote = m_source[m_current_index];
+    const char  quote = m_source[m_current_index];
     advance();
 
-    while (m_source[m_current_index] != quote) {
+    while (m_current_index < m_max_index && m_source[m_current_index] != quote) {
         value += m_source[m_current_index];
         advance();
     }
 
-    advance();
+    if (m_current_index >= m_max_index) {
+        throwError("Tokenizer: unterminated string or char literal");
+    }
+
+    advance(); // Consume the closing quote
 
     if (quote == '"') {
         addToken(TokenType::String, value);
@@ -112,21 +102,25 @@ void Tokenizer::handleStringOrChar() {
         if (value.size() != 1) {
             throwError("Tokenizer: invalid char");
         }
-
         addToken(TokenType::Char, value);
     }
 }
 
 void Tokenizer::handleNumber() {
-    // Integer or float
     std::string number;
-    bool isFloat = false;
-    while (isdigit(m_source[m_current_index]) || m_source[m_current_index] == '.') {
+    bool        isFloat = false;
+
+    while (m_current_index < m_max_index && (isdigit(m_source[m_current_index]) || m_source[m_current_index] == '.')) {
         if (m_source[m_current_index] == '.') {
             if (isFloat) {
-                throwError("Tokenizer: invalid float");
+                throwError("Tokenizer: multiple periods in float");
             }
             isFloat = true;
+
+            // Check if there's a digit after the '.'
+            if (m_current_index + 1 >= m_max_index || !isdigit(m_source[m_current_index + 1])) {
+                throwError("Tokenizer: invalid float format");
+            }
         }
 
         number += m_source[m_current_index];
@@ -138,20 +132,23 @@ void Tokenizer::handleNumber() {
 
 void Tokenizer::handleIdentifierOrKeyword() {
     std::string identifier;
-    while (isalnum(m_source[m_current_index]) || m_source[m_current_index] == '_') {
+
+    while (m_current_index < m_max_index && (isalnum(m_source[m_current_index]) || m_source[m_current_index] == '_')) {
         identifier += m_source[m_current_index];
         advance();
     }
 
     if (KEYWORDS.contains(identifier)) {
         addToken(TokenType::Keyword, identifier);
-        return;
+    } else {
+        addToken(TokenType::Identifier, identifier);
     }
-
-    addToken(TokenType::Identifier, identifier);
 }
 
 void Tokenizer::advance() {
+    if (m_current_index >= m_max_index) {
+        throwError("Tokenizer: cannot advance past end of source");
+    }
     m_current_index++;
     m_column++;
 }
@@ -162,12 +159,13 @@ void Tokenizer::addToken(TokenType type, const std::string &value) {
 
 void Tokenizer::throwError(const std::string &message) const {
     throw std::runtime_error(message + " at line " + std::to_string(m_line) + " column " + std::to_string(m_column) +
-                             " (character: " + std::string(1, m_source[m_current_index]) + ")");
+                             " (character: " +
+                             (m_current_index < m_max_index ? std::string(1, m_source[m_current_index]) : "EOF") + ")");
 }
 
 auto Tokenizer::readSource() const -> std::string {
     std::ifstream file(m_filepath);
-    std::string source;
+    std::string   source;
 
     if (file.is_open()) {
         std::string line;
@@ -175,8 +173,7 @@ auto Tokenizer::readSource() const -> std::string {
             source += line + '\n';
         }
     } else {
-        throw std::runtime_error("Failed to open file: " + m_filepath.string() +
-                                 " (resolved path: " + absolute(m_filepath).string() + ")");
+        throw std::runtime_error("Failed to open file");
     }
 
     return source;

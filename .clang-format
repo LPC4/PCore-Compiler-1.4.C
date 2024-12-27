@@ -4,7 +4,7 @@ Language:        Cpp
 BasedOnStyle:    LLVM
 AccessModifierOffset: -4
 AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
+AlignConsecutiveDeclarations: true
 AlignOperands:   true
 AlignTrailingComments: true
 AlwaysBreakTemplateDeclarations: Yes

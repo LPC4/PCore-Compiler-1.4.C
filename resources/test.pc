@@ -1,5 +1,6 @@
 program test;
 
+
 (int x, int y) -> int
 func main {
     // float z = x + y;

@@ -103,4 +103,9 @@ void LogicalOperation::print(const std::string indent) const {
     right->print(indent + "  ");
 }
 
+void ParenthesizedExpression::print(const std::string indent) const {
+    std::cout << indent << "Parenthesized Expression" << '\n';
+    expression->print(indent + "  ");
+}
+
 void Reference::print(const std::string indent) const { std::cout << indent << "Reference: " << name << '\n'; }
