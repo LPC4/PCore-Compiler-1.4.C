@@ -42,7 +42,7 @@
 - Example:
   ```c++
   (int x, int y) -> int 
-  add {
+  func add {
       return x + y;
   }
     
