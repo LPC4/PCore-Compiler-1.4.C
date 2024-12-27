@@ -2,16 +2,17 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 #include <vector>
+#include "AbstractSyntaxTree.h"
 #include "Tokenizer.h"
-#include "ast/AbstractSyntaxTree.h"
 
 class Parser {
 public:
     Parser();
 
     // Main parse function
-    void parse(std::vector<Token> tokens);
+    std::unique_ptr<Program> parse(std::vector<Token> tokens);
 
 private:
     std::vector<Token> m_tokens;
@@ -19,19 +20,21 @@ private:
 
     // --------------------- Parsing functions --------------------- //
 
-    std::unique_ptr<Program>                   parseProgram();
-    std::unique_ptr<AbstractNode>              parseDeclaration();
-    std::unique_ptr<AbstractNode>              parseStatement();
-    std::vector<std::unique_ptr<AbstractNode>> parseBlock();
-    std::unique_ptr<IfStatement>               parseIfStatement();
-    std::unique_ptr<WhileLoop>                 parseWhileLoop();
-    std::unique_ptr<ReturnStatement>           parseReturnStatement();
-    std::unique_ptr<ExpressionStatement>       parseExpressionStatement();
-    std::unique_ptr<VariableDeclaration>       parseVariableDeclaration();
-    std::unique_ptr<FunctionCall>              parseFunctionCall();
-    std::unique_ptr<FunctionDeclaration>       parseFunctionDeclaration();
-    std::unique_ptr<BinaryOperation>           parseBinaryOperation();
-    std::unique_ptr<Assignment>                parseAssignment();
+    std::unique_ptr<Program>             parseProgram();
+    std::unique_ptr<Block>               parseBlock();
+    std::unique_ptr<AbstractNode>        parseDeclaration();
+    std::unique_ptr<AbstractNode>        parseStatement();
+    std::unique_ptr<IfStatement>         parseIfStatement();
+    std::unique_ptr<WhileLoop>           parseWhileLoop();
+    std::unique_ptr<ReturnStatement>     parseReturnStatement();
+    std::unique_ptr<AbstractNode>        parseExpression();
+    std::unique_ptr<AbstractNode>        parsePrimaryExpression();
+    std::unique_ptr<AbstractNode>        parseUnaryExpression();
+    std::unique_ptr<VariableDeclaration> parseVariableDeclaration();
+    std::unique_ptr<FunctionCall>        parseFunctionCall();
+    std::unique_ptr<FunctionDeclaration> parseFunctionDeclaration();
+    std::unique_ptr<AbstractNode>        parseBinaryOperation(int precedence = 0);
+    std::unique_ptr<Assignment>          parseAssignment();
 
     // ------------------ Parsing Helper Functions ------------------ //
 
@@ -41,8 +44,6 @@ private:
     void consume(TokenType type);
     void consume(const std::string &value);
     void consume(TokenType type, const std::string &value);
-
-    void throwError(const std::string &message) const;
 
     // Returns true if the current token matches
     [[nodiscard]] bool match(TokenType type) const;
@@ -57,7 +58,13 @@ private:
 
     [[nodiscard]] bool isAtEnd() const;
 
+    [[noreturn]] void throwError(const std::string &message) const;
+
+    // ------------------ Static Helper Functions ------------------ //
+
+    [[nodiscard]] static bool isBinaryOperator(const Token &peek);
     [[nodiscard]] static bool isBinaryOperation(const std::vector<Token> &line);
+    [[nodiscard]] static int  getOperatorPrecedence(const std::string &string);
 };
 
 inline auto Parser::peek() const -> Token { return m_tokens[m_current_index]; }
@@ -80,10 +87,9 @@ inline auto Parser::peekUntilEOL() -> std::vector<Token> {
 
 inline void Parser::advance() {
     if (isAtEnd()) {
-        throwError("Parser: cannot advance past end of token stream");
-    } else {
-        ++m_current_index;
+        throwError("cannot advance past end of token stream");
     }
+    ++m_current_index;
 }
 
 inline auto Parser::isAtEnd() const -> bool { return m_current_index >= m_tokens.size(); }
@@ -101,27 +107,58 @@ inline auto Parser::match(const TokenType type, const std::string &value) const 
 }
 
 inline void Parser::consume(const TokenType type) {
-    match(type) ? advance() : throwError("Parser: expected token of type " + tokenTypeToString(type));
+    match(type) ? advance() : throwError("expected token of type " + tokenTypeToString(type));
 }
 
 inline void Parser::consume(const std::string &value) {
-    match(value) ? advance() : throwError("Parser: expected token with value " + value);
+    match(value) ? advance() : throwError("expected token with value " + value);
 }
 
-inline void Parser::consume(TokenType type, const std::string &value) {
+inline void Parser::consume(const TokenType type, const std::string &value) {
     match(type, value)
             ? advance()
-            : throwError("Parser: expected token of type " + tokenTypeToString(type) + " with value " + value);
+            : throwError("expected token of type " + tokenTypeToString(type) + " with value " + value);
 }
 
 inline void Parser::throwError(const std::string &message) const {
     throw std::runtime_error("Parse error: " + message + " at line " + std::to_string(peek().getPosition().getLine()) +
                              " column " + std::to_string(peek().getPosition().getColumn()) +
-                             " (token: " + peek().getValue() + ")");
+                             " (token: \"" + peek().getValue() + "\")");
 }
 
-inline auto Parser::isBinaryOperation(const std::vector<Token>& line) -> bool {
-    return std::ranges::any_of(line, [](const Token& token) {
-        return BINARY_OPERATORS.contains(token.getValue());
-    });
+inline auto Parser::isBinaryOperation(const std::vector<Token> &line) -> bool {
+    return std::ranges::any_of(line, [](const Token &token) { return BINARY_OPERATORS.contains(token.getValue()); });
+}
+
+inline auto Parser::isBinaryOperator(const Token &peek) -> bool { return BINARY_OPERATORS.contains(peek.getValue()); }
+
+inline auto Parser::getOperatorPrecedence(const std::string &op) -> int {
+    static const std::unordered_map<std::string, int> precedenceTable = {
+            {"=", 1},  // Assignment
+            {"||", 2}, // Logical OR
+            {"&&", 3}, // Logical AND
+            {"|", 4},  // Bitwise OR
+            {"^", 5},  // Bitwise XOR
+            {"&", 6},  // Bitwise AND
+            {"==", 7}, // Equality
+            {"!=", 7}, // Inequality
+            {"<", 8},  // Relational
+            {">", 8},  // Relational
+            {"<=", 8}, // Relational
+            {">=", 8}, // Relational
+            {"+", 9},  // Addition
+            {"-", 9},  // Subtraction
+            {"*", 10}, // Multiplication
+            {"/", 10}, // Division
+            {"%", 10}, // Modulo
+            {"-", 11}, // Unary negation (handled separately in unary parsing)
+            {"!", 11}, // Logical NOT (handled separately in unary parsing)
+    };
+
+    const auto it = precedenceTable.find(op);
+    if (it != precedenceTable.end()) {
+        return it->second;
+    }
+
+    throw std::runtime_error("invalid operator " + op);
 }

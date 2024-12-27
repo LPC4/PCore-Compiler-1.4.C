@@ -2,13 +2,13 @@
 
 #include <algorithm>
 
-#include "../include/ast/AbstractSyntaxTree.h"
+#include "../include/AbstractSyntaxTree.h"
 
 Parser::Parser() = default;
 
-void Parser::parse(std::vector<Token> tokens) {
+auto Parser::parse(std::vector<Token> tokens) -> std::unique_ptr<Program> {
     m_tokens = std::move(tokens);
-    parseProgram();
+    return parseProgram();
 }
 
 auto Parser::parseProgram() -> std::unique_ptr<Program> {
@@ -22,11 +22,12 @@ auto Parser::parseProgram() -> std::unique_ptr<Program> {
     consume(";");
 
     // program body
+    std::unique_ptr<Block> body = std::make_unique<Block>();
     while (!isAtEnd()) {
-        parseDeclaration();
+        body->statements.push_back(parseDeclaration());
     }
 
-    return std::make_unique<Program>(programName, nullptr);
+    return std::make_unique<Program>(programName, std::move(body));
 };
 
 auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
@@ -48,7 +49,6 @@ auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
     }
 
     throwError("Parser: invalid statement");
-    return nullptr;
 }
 
 auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> {
@@ -60,7 +60,8 @@ auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> 
     std::string                                 returnType = "void";
 
     if (match(TokenType::Symbol, "(")) {
-        //  - ( type identifier, ... ) -> return_type # params and return type explicitly defined
+        //  - ( type identifier, ... ) -> return_type   # params and return type explicitly defined
+
         advance(); // consume "("
 
         while (!match(TokenType::Symbol, ")")) {
@@ -91,9 +92,8 @@ auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> 
     consume(TokenType::Identifier);
     consume(TokenType::Symbol, "{");
 
-
     // parse body
-    std::unique_ptr<Block> body; // parse body
+    std::unique_ptr<Block> body = std::make_unique<Block>();
     while (!match(TokenType::Symbol, "}")) {
         body->statements.push_back(parseStatement());
     }
@@ -134,40 +134,199 @@ auto Parser::parseStatement() -> std::unique_ptr<AbstractNode> {
     if (match(TokenType::Identifier)) {
         return parseVariableDeclaration();
     }
-    if (isBinaryOperation(peekUntilEOL())) {
-        return parseBinaryOperation();
-    }
 
     throwError("Parser: invalid statement");
-    return nullptr;
 }
 
 auto Parser::parseVariableDeclaration() -> std::unique_ptr<VariableDeclaration> {
-    return nullptr;
+    // type [*|&] identifier [= expression];
+    std::string type = peek().getValue();
+    consume(TokenType::Identifier);
+
+    bool isPointer = false;
+    bool isReference = false;
+
+    if (match(TokenType::Symbol, "*")) {
+        isPointer = true;
+        advance(); // Consume the '*'
+    } else if (match(TokenType::Symbol, "&")) {
+        isReference = true;
+        advance(); // Consume the '&'
+    }
+
+    std::string name = peek().getValue();
+    consume(TokenType::Identifier);
+
+    std::unique_ptr<AbstractNode> initializer = nullptr;
+    if (match(TokenType::Symbol, "=")) {
+        advance(); // Consume the '='
+        initializer = parseExpression();
+    }
+
+    consume(TokenType::Symbol, ";");
+
+    return std::make_unique<VariableDeclaration>(type, name, isPointer, isReference, std::move(initializer));
 }
 
-auto Parser::parseFunctionCall() -> std::unique_ptr<FunctionCall> {
-    return nullptr;
+auto Parser::parseExpression() -> std::unique_ptr<AbstractNode> {
+    // Parse an expression by delegating to parseBinaryOperation
+    return parseBinaryOperation();
 }
 
-auto Parser::parseBinaryOperation() -> std::unique_ptr<BinaryOperation> {
-    return nullptr;
+auto Parser::parseBinaryOperation(const int precedence) -> std::unique_ptr<AbstractNode> {
+    auto lhs = parseUnaryExpression();
+
+    while (true) {
+        if (!isBinaryOperator(peek()))
+            break;
+
+        const int currentPrecedence = getOperatorPrecedence(peek().getValue());
+        if (currentPrecedence < precedence)
+            break;
+
+        std::string op = peek().getValue();
+        advance(); // Consume operator
+
+        auto rhs = parseBinaryOperation(currentPrecedence + 1);
+
+        lhs = std::make_unique<BinaryOperation>(std::move(lhs), op, std::move(rhs));
+    }
+
+    return lhs;
 }
 
 auto Parser::parseAssignment() -> std::unique_ptr<Assignment> {
-    return nullptr;
+    std::string variable = peek().getValue();
+    consume(TokenType::Identifier);
+
+    consume(TokenType::Symbol, "=");
+
+    auto value = parseExpression();
+
+    consume(TokenType::Symbol, ";");
+
+    return std::make_unique<Assignment>(variable, std::move(value));
+}
+
+auto Parser::parseFunctionCall() -> std::unique_ptr<FunctionCall> {
+    std::string functionName = peek().getValue();
+    consume(TokenType::Identifier);
+    consume(TokenType::Symbol, "(");
+
+    std::vector<std::unique_ptr<AbstractNode>> arguments;
+    if (!match(TokenType::Symbol, ")")) {
+        while (true) {
+            arguments.push_back(parseExpression());
+            if (match(TokenType::Symbol, ",")) {
+                advance(); // Consume ","
+            } else {
+                break;
+            }
+        }
+    }
+
+    consume(TokenType::Symbol, ")");
+
+    if (match(TokenType::Symbol, ";")) {
+        consume(TokenType::Symbol, ";");
+    }
+
+    return std::make_unique<FunctionCall>(functionName, std::move(arguments));
 }
 
 auto Parser::parseIfStatement() -> std::unique_ptr<IfStatement> {
-    return nullptr;
+    // if condition { ... } else { ... }
+
+    consume(TokenType::Keyword, "if");
+
+    std::unique_ptr<AbstractNode> condition = parseExpression();
+
+    printf("current token: %s\n", peek().getValue().c_str());
+
+    std::unique_ptr<Block> thenBranch = parseBlock();
+
+    if (match(TokenType::Keyword, "else")) {
+        advance(); // Consume "else"
+        std::unique_ptr<Block> elseBranch = parseBlock();
+        return std::make_unique<IfStatement>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
+    }
+
+    return std::make_unique<IfStatement>(std::move(condition), std::move(thenBranch));
 }
 
 auto Parser::parseWhileLoop() -> std::unique_ptr<WhileLoop> {
-    return nullptr;
+    // while condition { ... }
+
+    consume(TokenType::Keyword, "while");
+
+    std::unique_ptr<AbstractNode> condition = parseExpression();
+
+    std::unique_ptr<Block> body = parseBlock();
+
+    return std::make_unique<WhileLoop>(std::move(condition), std::move(body));
+}
+
+auto Parser::parseBlock() -> std::unique_ptr<Block> {
+    std::unique_ptr<Block> block = std::make_unique<Block>();
+
+    consume(TokenType::Symbol, "{");
+
+    while (!match(TokenType::Symbol, "}")) {
+        block->statements.push_back(parseStatement());
+    }
+
+    consume(TokenType::Symbol, "}");
+
+    return block;
 }
 
 auto Parser::parseReturnStatement() -> std::unique_ptr<ReturnStatement> {
-    return nullptr;
+    consume(TokenType::Keyword, "return");
+
+    std::unique_ptr<AbstractNode> value = nullptr;
+    if (!match(TokenType::Symbol, ";")) {
+        value = parseExpression();
+    }
+
+    consume(TokenType::Symbol, ";");
+
+    return std::make_unique<ReturnStatement>(std::move(value));
 }
 
+auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
+    if (match(TokenType::Integer) || match(TokenType::Float) || match(TokenType::Char) || match(TokenType::String)) {
+        auto value = peek().getValue();
+        auto type = tokenTypeToString(peek().getType());
+        advance();
+        return std::make_unique<Literal>(value, type);
+    }
 
+
+    if (match(TokenType::Identifier)) {
+        std::string name = peek().getValue();
+        if (peekNext().getValue() == "(") {
+            return parseFunctionCall(); // Handle function call
+        }
+        advance();
+        return std::make_unique<Reference>(name); // Variable reference
+    }
+
+    if (match(TokenType::Symbol, "(")) {
+        advance(); // Consume "("
+        auto expr = parseExpression();
+        consume(TokenType::Symbol, ")");
+        return expr; // Parenthesized expression
+    }
+
+    throwError("Unexpected primary expression.");
+}
+
+auto Parser::parseUnaryExpression() -> std::unique_ptr<AbstractNode> {
+    if (match(TokenType::Symbol, "-") || match(TokenType::Symbol, "!")) {
+        std::string op = peek().getValue();
+        advance();                             // Consume the operator
+        auto operand = parseUnaryExpression(); // Recursively parse the operand
+        return std::make_unique<UnaryOperation>(std::move(operand), op);
+    }
+    return parsePrimaryExpression(); // If no unary operator, parse a primary expression
+}

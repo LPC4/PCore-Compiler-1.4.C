@@ -16,11 +16,9 @@ const std::set<std::string> LONG_SYMBOLS = {"==", "!=", "<=", ">=", "&&", "||", 
 
 const std::set<char> WHITESPACE = {' ', '\t', '\n', '\r', '\0'};
 
-const std::set<std::string> BINARY_OPERATORS = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">="};
+const std::set<std::string> BINARY_OPERATORS = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||"};
 
 const std::set<std::string> UNARY_OPERATORS = {"+", "-", "!"};
-
-const std::set<std::string> LOGICAL_OPERATORS = {"&&", "||"};
 
 enum class TokenType : std::uint8_t {
     Identifier, // Function names, variable names, etc.

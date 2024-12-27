@@ -1,20 +1,24 @@
 program test;
 
-
 (int x, int y) -> int
 func main {
-    // float z = x + y;
+    float z = x + y;
 
-    // while (z > 0) {
-    //    z = z - 1;
-    // }
+    bit a = 0;
+    bit b = a + a;
 
-    // return z;
+    if condition() + 1 {
+        return 0;
+    } else {
+        return 1;
+    }
+
+    while condition() + 1 == 1 {
+        x = x + 1;
+    }
+
+    return x+y;
 }
-
-
-
-
 
 
 

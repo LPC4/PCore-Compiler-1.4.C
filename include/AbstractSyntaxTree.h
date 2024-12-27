@@ -24,7 +24,6 @@ class Reference;
 // Operation nodes
 class BinaryOperation;
 class UnaryOperation;
-class LogicalOperation;
 class ParenthesizedExpression;
 
 // statements
@@ -44,7 +43,7 @@ class PointerAssignment;
 class AbstractNode {
 public:
     virtual ~AbstractNode() = default;
-    virtual void print(std::string indent) const = 0;
+    virtual void print(std::string indent = "") const = 0;
 };
 
 // Block node, representing a sequence of statements
@@ -53,6 +52,7 @@ public:
     std::vector<std::unique_ptr<AbstractNode>> statements;
 
     explicit Block(std::vector<std::unique_ptr<AbstractNode>> statements) : statements(std::move(statements)) {}
+    Block() = default;
 
     void print(std::string indent) const override;
 };
@@ -64,6 +64,7 @@ public:
     std::unique_ptr<Block> body;
 
     explicit Program(std::string name, std::unique_ptr<Block> body) : name(std::move(name)), body(std::move(body)) {}
+    Program() = default;
 
     void print(std::string indent) const override;
 };
@@ -103,15 +104,26 @@ public:
     void print(std::string indent) const override;
 };
 
-// Variable declaration node
-class VariableDeclaration final : public AbstractNode {
+class VariableDeclaration : public AbstractNode {
 public:
     std::string                   type;
     std::string                   name;
+    bool                          isPointer;
+    bool                          isReference;
     std::unique_ptr<AbstractNode> initializer;
 
+    VariableDeclaration(const std::string &type, const std::string &name, const bool isPointer, const bool isReference,
+                        std::unique_ptr<AbstractNode> initializer) :
+        type(type), name(name), isPointer(isPointer), isReference(isReference), initializer(std::move(initializer)) {}
+
     VariableDeclaration(std::string type, std::string name, std::unique_ptr<AbstractNode> initializer) :
-        type(std::move(type)), name(std::move(name)), initializer(std::move(initializer)) {}
+        type(std::move(type)), name(std::move(name)), isPointer(false), isReference(false),
+        initializer(std::move(initializer)) {}
+
+    VariableDeclaration(std::string type, std::string name, std::unique_ptr<AbstractNode> initializer,
+                        const bool isPointer) :
+        type(std::move(type)), name(std::move(name)), isPointer(isPointer), isReference(false),
+        initializer(std::move(initializer)) {}
 
     void print(std::string indent) const override;
 };
@@ -159,20 +171,6 @@ public:
 
     UnaryOperation(std::unique_ptr<AbstractNode> operand, std::string operatorSymbol) :
         operand(std::move(operand)), operatorSymbol(std::move(operatorSymbol)) {}
-
-    void print(std::string indent) const override;
-};
-
-// Logical operation node (e.g., a && b)
-class LogicalOperation final : public AbstractNode {
-public:
-    std::unique_ptr<AbstractNode> left;
-    std::string                   operatorSymbol;
-    std::unique_ptr<AbstractNode> right;
-
-    LogicalOperation(std::unique_ptr<AbstractNode> left, std::string operatorSymbol,
-                     std::unique_ptr<AbstractNode> right) :
-        left(std::move(left)), operatorSymbol(std::move(operatorSymbol)), right(std::move(right)) {}
 
     void print(std::string indent) const override;
 };

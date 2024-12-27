@@ -1,4 +1,4 @@
-#include "../../include/ast/AbstractSyntaxTree.h"
+#include "../include/AbstractSyntaxTree.h"
 
 void Block::print(const std::string indent) const {
     std::cout << indent << "Block" << '\n';
@@ -9,7 +9,7 @@ void Block::print(const std::string indent) const {
 
 void Program::print(const std::string indent) const {
     std::cout << indent << "Program: " << name << '\n';
-    body->print(indent + "  ");
+    body->print(indent);
 }
 
 void FunctionDeclaration::print(const std::string indent) const {
@@ -58,7 +58,6 @@ void PointerAssignment::print(const std::string indent) const {
     pointer->print(indent + "  ");
 }
 
-
 void ReturnStatement::print(const std::string indent) const {
     std::cout << indent << "Return Statement" << '\n';
     expression->print(indent + "  ");
@@ -95,12 +94,6 @@ void BinaryOperation::print(const std::string indent) const {
 void UnaryOperation::print(const std::string indent) const {
     std::cout << indent << "Unary Operation: " << operatorSymbol << '\n';
     operand->print(indent + "  ");
-}
-
-void LogicalOperation::print(const std::string indent) const {
-    std::cout << indent << "Logical Operation: " << operatorSymbol << '\n';
-    left->print(indent + "  ");
-    right->print(indent + "  ");
 }
 
 void ParenthesizedExpression::print(const std::string indent) const {
