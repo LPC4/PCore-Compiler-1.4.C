@@ -7,7 +7,7 @@ The **PCore Compiler** is an ambitious project to create a robust compiler for t
 ### Current Functionality
 - **Tokenizer**: Breaks down PCore source code into meaningful tokens.
 - **Parser**: Converts tokens into an Abstract Syntax Tree (AST).
-- **Syntax Validation**: PCore-specific syntax is fully documented in the [documentation](documentation)` folder.
+- **Syntax Validation**: PCore-specific syntax is fully documented in the [documentation](docs) folder.
 
 ### Planned Features
 - **AST Analysis**: Enhance the structure and semantic validity of the generated AST.
@@ -44,7 +44,7 @@ The PCore Compiler aims to:
    ```
 
 ### Documentation
-Detailed documentation on PCore’s syntax, design goals, and examples can be found in the [documentation](documentation) folder.
+Detailed documentation on PCore’s syntax, design goals, and examples can be found in the [documentation](docs) folder.
 
 ## Contributing
 Contributions are welcome! If you’d like to help improve the project, please:
