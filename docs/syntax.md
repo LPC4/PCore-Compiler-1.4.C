@@ -6,7 +6,6 @@
   ```c++
   program main
   
-  () -> void
   main {
       print("Hello, World!");
   }
