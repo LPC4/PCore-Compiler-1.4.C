@@ -12,6 +12,7 @@ The **PCore Compiler** is an ambitious project to create a robust compiler for t
 
 ### Planned Features
 - **LLVM Code Generation**: Transform the AST into optimized LLVM Intermediate Representation (IR).
+- **Array Functionality**: Easily manage and create arrays on the heap. 
 
 ## Project Goals
 The PCore Compiler aims to:
