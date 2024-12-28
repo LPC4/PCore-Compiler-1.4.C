@@ -1,6 +1,6 @@
 program test;
 
-(int x, int y) -> int
+(int x, char y) -> int
 func main {
     float z = x + y;
 
@@ -16,6 +16,9 @@ func main {
     while condition() + 1 == 1 {
         x = x + 1;
     }
+
+    int* p = alloc(sizeof(int));
+    *p = 1;
 
     return x+y;
 }

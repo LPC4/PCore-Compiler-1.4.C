@@ -143,8 +143,9 @@ public:
 class Reference final : public AbstractNode {
 public:
     std::string name;
+    bool        isReference;
 
-    explicit Reference(std::string name) : name(std::move(name)) {}
+    explicit Reference(std::string name, const bool isReference) : name(std::move(name)), isReference(isReference) {}
 
     void print(std::string indent) const override;
 };
@@ -236,9 +237,10 @@ class Assignment final : public AbstractNode {
 public:
     std::string                   name;
     std::unique_ptr<AbstractNode> value;
+    bool                          isPointerDereference;
 
-    Assignment(std::string name, std::unique_ptr<AbstractNode> value) :
-        name(std::move(name)), value(std::move(value)) {}
+    Assignment(std::string name, std::unique_ptr<AbstractNode> value, const bool isPointerDereference) :
+        name(std::move(name)), value(std::move(value)), isPointerDereference(isPointerDereference) {}
 
     void print(std::string indent) const override;
 };

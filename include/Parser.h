@@ -115,15 +115,14 @@ inline void Parser::consume(const std::string &value) {
 }
 
 inline void Parser::consume(const TokenType type, const std::string &value) {
-    match(type, value)
-            ? advance()
-            : throwError("expected token of type " + tokenTypeToString(type) + " with value " + value);
+    match(type, value) ? advance()
+                       : throwError("expected token of type " + tokenTypeToString(type) + " with value " + value);
 }
 
 inline void Parser::throwError(const std::string &message) const {
     throw std::runtime_error("Parse error: " + message + " at line " + std::to_string(peek().getPosition().getLine()) +
-                             " column " + std::to_string(peek().getPosition().getColumn()) +
-                             " (token: \"" + peek().getValue() + "\")");
+                             " column " + std::to_string(peek().getPosition().getColumn()) + " (token: \"" +
+                             peek().getValue() + "\")");
 }
 
 inline auto Parser::isBinaryOperation(const std::vector<Token> &line) -> bool {
@@ -133,7 +132,7 @@ inline auto Parser::isBinaryOperation(const std::vector<Token> &line) -> bool {
 inline auto Parser::isBinaryOperator(const Token &peek) -> bool { return BINARY_OPERATORS.contains(peek.getValue()); }
 
 inline auto Parser::getOperatorPrecedence(const std::string &op) -> int {
-    static const std::unordered_map<std::string, int> precedenceTable = {
+    static const std::unordered_map<std::string, int> PRECEDENCE_TABLE = {
             {"=", 1},  // Assignment
             {"||", 2}, // Logical OR
             {"&&", 3}, // Logical AND
@@ -155,8 +154,8 @@ inline auto Parser::getOperatorPrecedence(const std::string &op) -> int {
             {"!", 11}, // Logical NOT (handled separately in unary parsing)
     };
 
-    const auto it = precedenceTable.find(op);
-    if (it != precedenceTable.end()) {
+    const auto it = PRECEDENCE_TABLE.find(op);
+    if (it != PRECEDENCE_TABLE.end()) {
         return it->second;
     }
 

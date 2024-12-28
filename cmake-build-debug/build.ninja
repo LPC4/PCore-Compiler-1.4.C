@@ -55,6 +55,12 @@ build CMakeFiles/projects.dir/src/AbstractSyntaxTree.cpp.obj: CXX_COMPILER__proj
   OBJECT_DIR = CMakeFiles\projects.dir
   OBJECT_FILE_DIR = CMakeFiles\projects.dir\src
 
+build CMakeFiles/projects.dir/src/CodeGenerator.cpp.obj: CXX_COMPILER__projects_unscanned_Debug E$:/Utility/code/projects/src/CodeGenerator.cpp || cmake_object_order_depends_target_projects
+  DEP_FILE = CMakeFiles\projects.dir\src\CodeGenerator.cpp.obj.d
+  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\projects.dir
+  OBJECT_FILE_DIR = CMakeFiles\projects.dir\src
+
 build CMakeFiles/projects.dir/src/Parser.cpp.obj: CXX_COMPILER__projects_unscanned_Debug E$:/Utility/code/projects/src/Parser.cpp || cmake_object_order_depends_target_projects
   DEP_FILE = CMakeFiles\projects.dir\src\Parser.cpp.obj.d
   FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
@@ -81,7 +87,7 @@ build CMakeFiles/projects.dir/src/main.cpp.obj: CXX_COMPILER__projects_unscanned
 #############################################
 # Link the executable projects.exe
 
-build projects.exe: CXX_EXECUTABLE_LINKER__projects_Debug CMakeFiles/projects.dir/src/AbstractSyntaxTree.cpp.obj CMakeFiles/projects.dir/src/Parser.cpp.obj CMakeFiles/projects.dir/src/Tokenizer.cpp.obj CMakeFiles/projects.dir/src/main.cpp.obj
+build projects.exe: CXX_EXECUTABLE_LINKER__projects_Debug CMakeFiles/projects.dir/src/AbstractSyntaxTree.cpp.obj CMakeFiles/projects.dir/src/CodeGenerator.cpp.obj CMakeFiles/projects.dir/src/Parser.cpp.obj CMakeFiles/projects.dir/src/Tokenizer.cpp.obj CMakeFiles/projects.dir/src/main.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\projects.dir
