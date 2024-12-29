@@ -1,9 +1,10 @@
 #include <string>
 
+#include "../include/CodeGenerator.h"
 #include "../include/Parser.h"
 #include "../include/Tokenizer.h"
 
-enum ExitCode : std::uint8_t { SUCCESS = 0, TOKENIZER_ERROR = 1, PARSER_ERROR = 2 };
+enum ExitCode : std::uint8_t { SUCCESS = 0, TOKENIZER_ERROR = 1, PARSER_ERROR = 2, IR_ERROR = 3 };
 
 const static std::string NAME = "PCore Compiler";
 const static std::string VERSION = "1.4.0";
@@ -16,16 +17,16 @@ static int compile(const std::string &filepath) {
     try {
         Tokenizer tokenizer(filepath);
         tokens = tokenizer.tokenize();
+
+        // For debugging purposes
+        for (const Token &token : tokens) {
+            token.print();
+        }
+
+        printf("//---------------------- Tokenization successful ----------------------//\n");
     } catch (const std::runtime_error &e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return TOKENIZER_ERROR;
-    }
-
-    printf("Tokenization successful\n");
-
-    // For debugging purposes
-    for (const Token &token : tokens) {
-        token.print();
     }
 
     // Parse tokens
@@ -33,16 +34,29 @@ static int compile(const std::string &filepath) {
     try {
         Parser parser;
         program = parser.parse(tokens);
+
+        program->print("");
+
+        printf("//---------------------- Parsing successful ----------------------//\n");
+
     } catch (const std::runtime_error &e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return PARSER_ERROR;
     }
 
-    printf("Parsing successful\n");
+    // Generate intermediate representation
+    try {
+        CodeGenerator codeGenerator;
+        codeGenerator.generateCode(std::move(program));
 
-    program->print("");
+        printf("//---------------------- IR generation successful ----------------------//\n");
 
-    // todo: generate intermediate code in LLVM IR
+    } catch (const std::runtime_error &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
+        return IR_ERROR;
+    }
+
+    // todo: generate intermediate representation in LLVM IR
     // todo: generate executable
 
     return SUCCESS;

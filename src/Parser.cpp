@@ -16,7 +16,6 @@ auto Parser::parseProgram() -> std::unique_ptr<Program> {
     consume(TokenType::Keyword, "program");
 
     const std::string programName = peek().getValue();
-    printf("Program name: %s\n", programName.c_str());
 
     consume(TokenType::Identifier);
     consume(";");
@@ -260,8 +259,6 @@ auto Parser::parseIfStatement() -> std::unique_ptr<IfStatement> {
     consume(TokenType::Keyword, "if");
 
     auto condition = parseExpression();
-
-    printf("current token: %s\n", peek().getValue().c_str());
 
     auto thenBranch = parseBlock();
 
