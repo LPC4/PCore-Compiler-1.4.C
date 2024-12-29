@@ -1,102 +1,94 @@
 #include "../include/CodeGenerator.h"
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/IR/Value.h>
+
+CodeGenerator::CodeGenerator() :
+    context(),
+    module(std::make_unique<llvm::Module>("Module", context)),
+    builder(context) { }
 
 void CodeGenerator::generateCode(const std::unique_ptr<Program> &program) {
-    program->accept(*this);
+    // Empty
 }
 
-
-// Visitor functions
-void CodeGenerator::visit(const Block& node) {
-    // Handle Block node
-    for (const auto& statement : node.statements) {
-        statement->accept(*this);
-    }
+void CodeGenerator::visit(const Block &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const Program& node) {
-    // Handle Program node
-    printf("Program: %s\n", node.name.c_str());
-    node.body->accept(*this);
+void CodeGenerator::visit(const Program &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const FunctionDeclaration& node) {
-    // Handle FunctionDeclaration node
-    printf("FunctionDeclaration: %s\n", node.name.c_str());
-    node.body->accept(*this);
+void CodeGenerator::visit(const FunctionDeclaration &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const VariableDeclaration& node) {
-    // Handle VariableDeclaration node
-    printf("VariableDeclaration: %s\n", node.name.c_str());
+void CodeGenerator::visit(const VariableDeclaration &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const FunctionCall& node) {
-    // Handle FunctionCall node
-    printf("FunctionCall: %s\n", node.name.c_str());
+void CodeGenerator::visit(const FunctionCall &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const Literal& node) {
-    // Handle Literal node
-    printf("Literal: %s\n", node.value.c_str());
+void CodeGenerator::visit(const Literal &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const Reference& node) {
-    // Handle Reference node
-    printf("Reference: %s\n", node.name.c_str());
+void CodeGenerator::visit(const Reference &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const BinaryOperation& node) {
-    // Handle BinaryOperation node
-    printf("BinaryOperation: %s\n", node.operatorSymbol.c_str());
+void CodeGenerator::visit(const BinaryOperation &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const UnaryOperation& node) {
-    // Handle UnaryOperation node
-    printf("UnaryOperation: %s\n", node.operatorSymbol.c_str());
+void CodeGenerator::visit(const UnaryOperation &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const IfStatement& node) {
-    // Handle IfStatement node
-    printf("IfStatement\n");
+void CodeGenerator::visit(const IfStatement &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const WhileLoop& node) {
-    // Handle WhileLoop node
-    printf("WhileLoop\n");
+void CodeGenerator::visit(const WhileLoop &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const ReturnStatement& node) {
-    // Handle ReturnStatement node
-    printf("ReturnStatement\n");
+void CodeGenerator::visit(const ReturnStatement &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const ExpressionStatement& node) {
-    // Handle ExpressionStatement node
-    printf("ExpressionStatement\n");
+void CodeGenerator::visit(const ExpressionStatement &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const Assignment& node) {
-    // Handle Assignment node
-    printf("Assignment: %s\n", node.name.c_str());
+void CodeGenerator::visit(const Assignment &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const MemoryAllocation& node) {
-    // Handle MemoryAllocation node
-    printf("MemoryAllocation: %s\n", node.type.c_str());
+void CodeGenerator::visit(const MemoryAllocation &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const MemoryDeallocation& node) {
-    // Handle MemoryDeallocation node
-    printf("MemoryDeallocation\n");
+void CodeGenerator::visit(const MemoryDeallocation &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const PointerAccess& node) {
-    // Handle PointerAccess node
-    printf("PointerAccess\n");
+void CodeGenerator::visit(const PointerAccess &node) {
+    // Empty
 }
 
-void CodeGenerator::visit(const PointerAssignment& node) {
-    // Handle PointerAssignment node
-    printf("PointerAssignment\n");
+void CodeGenerator::visit(const PointerAssignment &node) {
+    // Empty
 }
 
+llvm::Type* CodeGenerator::typeToLLVMType(const std::string &string) {
+    // Empty, return nullptr
+    return nullptr;
+}

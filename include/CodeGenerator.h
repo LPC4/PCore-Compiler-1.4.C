@@ -3,11 +3,24 @@
 #include "AbstractSyntaxTree.h"
 #include "Visitor.h"
 
-class CodeGenerator final : public Visitor {
-public:
-    CodeGenerator() = default;
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
+#include <llvm/Support/raw_ostream.h>
 
+using namespace llvm;
+
+class CodeGenerator : public Visitor {
+public:
+    LLVMContext             context;
+    std::unique_ptr<Module> module;
+    IRBuilder<>             builder;
+
+    CodeGenerator();
     void generateCode(const std::unique_ptr<Program> &program);
+
+    Type *typeToLLVMType(const std::string &string);
 
     // Visitor functions
     void visit(const Block &node) override;

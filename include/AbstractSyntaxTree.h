@@ -10,6 +10,9 @@
 
 #include "Visitor.h"
 
+namespace llvm {
+class Value;
+}
 // Abstract syntax tree node forward declarations
 class AbstractNode;
 class Program;
@@ -52,6 +55,13 @@ public:
 
     virtual void print(std::string indent = "") const = 0;
     virtual void accept(Visitor &visitor) const = 0;
+
+    // Set and get LLVM value methods
+    void setLLVMValue(llvm::Value* value) { llvmValue = value; }
+    llvm::Value* getLLVMValue() const { return llvmValue; }
+
+private:
+    llvm::Value* llvmValue = nullptr;  // Holds the LLVM value for this node
 };
 
 // Block node, representing a sequence of statements
@@ -87,9 +97,12 @@ public:
     std::string            name;
     std::vector<Parameter> parameters;
     std::unique_ptr<Block> body;
+    std::string            returnType;
 
-    FunctionDeclaration(std::string name, std::vector<Parameter> parameters, std::unique_ptr<Block> body) :
-        name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)) {}
+    FunctionDeclaration(std::string name, std::vector<Parameter> parameters, std::unique_ptr<Block> body,
+                        std::string returnType) :
+        name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)),
+        returnType(std::move(returnType)) {}
 
     void print(std::string indent) const override;
     void accept(Visitor &visitor) const override { visitor.visit(*this); }
