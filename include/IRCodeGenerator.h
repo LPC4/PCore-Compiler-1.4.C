@@ -3,9 +3,9 @@
 #include "AbstractSyntaxTree.h"
 #include "Visitor.h"
 
-class CodeGenerator final : public Visitor {
+class IRCodeGenerator final : public Visitor {
 public:
-    CodeGenerator() = default;
+    IRCodeGenerator() = default;
 
     void generateCode(const std::unique_ptr<Program> &program);
 
@@ -28,4 +28,11 @@ public:
     void visit(const MemoryDeallocation &node) override;
     void visit(const PointerAccess &node) override;
     void visit(const PointerAssignment &node) override;
+
+    auto getTempRegister() -> std::string;
+
+private:
+    std::string  m_irCode;
+    unsigned int m_labelCounter;
+    unsigned int m_registerCounter;
 };

@@ -1,6 +1,6 @@
 #include <string>
 
-#include "../include/CodeGenerator.h"
+#include "../include/IRCodeGenerator.h"
 #include "../include/Parser.h"
 #include "../include/Tokenizer.h"
 
@@ -46,8 +46,8 @@ static int compile(const std::string &filepath) {
 
     // Generate intermediate representation
     try {
-        CodeGenerator codeGenerator;
-        codeGenerator.generateCode(std::move(program));
+        IRCodeGenerator codeGenerator;
+        codeGenerator.generateCode(program);
 
         printf("//---------------------- IR generation successful ----------------------//\n");
 

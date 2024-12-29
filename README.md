@@ -8,18 +8,15 @@ The **PCore Compiler** is an ambitious project to create a robust compiler for t
 - **Tokenizer**: Breaks down PCore source code into meaningful tokens.
 - **Parser**: Converts tokens into an Abstract Syntax Tree (AST).
 - **Syntax Validation**: PCore-specific syntax is fully documented in the [documentation](docs) folder.
-- **AST Analysis**: Enhance the structure and semantic validity of the generated AST.
 
 ### Planned Features
-- **LLVM Code Generation**: Transform the AST into optimized LLVM Intermediate Representation (IR).
+- **IR Code Generation**: Transform the AST into a custom intermediate representation.
 - **Array Functionality**: Easily manage and create arrays on the heap. 
+- **AST Analysis**: Enhance the structure and semantic validity of the generated AST.
+- **Optimization**: Implement optimizations to improve the generated code.
 
-## Project Goals
-The PCore Compiler aims to:
-1. Provide a seamless development experience for PCore programmers.
-2. Leverage LLVM for efficient, portable machine code generation.
-3. Serve as a foundation for experimenting with language design and compiler technologies.
-
+## Project Goal
+The PCore Compiler aims to serve as a foundation for experimenting with language design and compiler technologies. It provides a platform for learning, teaching, and exploring advanced concepts in compilers and programming languages. By focusing on a custom language, we can explore unique features and optimizations that may not be present in mainstream languages.
 ## Getting Started
 
 ### Prerequisites

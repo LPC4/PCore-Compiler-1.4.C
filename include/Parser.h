@@ -56,8 +56,7 @@ private:
     [[nodiscard]] std::vector<Token> peekUntilEOL();
 
     [[nodiscard]] bool isAtEnd() const;
-
-    [[noreturn]] void throwError(const std::string &message) const;
+    [[noreturn]] void  throwError(const std::string &message) const;
 
     // ------------------ Static Helper Functions ------------------ //
 

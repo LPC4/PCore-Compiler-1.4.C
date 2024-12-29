@@ -156,10 +156,15 @@ public:
 // Reference node (e.g., variable names, function names)
 class Reference final : public AbstractNode {
 public:
-    std::string name;
-    bool        isReference;
+    std::string  name;
+    bool         isReference;
+    unsigned int offset;
 
-    explicit Reference(std::string name, const bool isReference) : name(std::move(name)), isReference(isReference) {}
+    explicit Reference(std::string name) : name(std::move(name)), isReference(false), offset(0) {}
+    explicit Reference(std::string name, const bool isReference) :
+        name(std::move(name)), isReference(isReference), offset(0) {}
+    explicit Reference(std::string name, const bool isReference, const int offset) :
+        name(std::move(name)), isReference(isReference), offset(offset) {}
 
     void print(std::string indent) const override;
     void accept(Visitor &visitor) const override { visitor.visit(*this); }
@@ -249,9 +254,13 @@ public:
     std::string                   name;
     std::unique_ptr<AbstractNode> value;
     bool                          isPointerDereference;
+    unsigned int                  offset;
 
     Assignment(std::string name, std::unique_ptr<AbstractNode> value, const bool isPointerDereference) :
-        name(std::move(name)), value(std::move(value)), isPointerDereference(isPointerDereference) {}
+        name(std::move(name)), value(std::move(value)), isPointerDereference(isPointerDereference), offset(0) {}
+    Assignment(std::string name, std::unique_ptr<AbstractNode> value, const bool isPointerDereference,
+               const unsigned int offset) :
+        name(std::move(name)), value(std::move(value)), isPointerDereference(isPointerDereference), offset(offset) {}
 
     void print(std::string indent) const override;
     void accept(Visitor &visitor) const override { visitor.visit(*this); }
