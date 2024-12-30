@@ -69,5 +69,3 @@ CheckOptions:
     value: 1
   - key: cppcoreguidelines-init-variables
     value: 1
-  - key: modernize-use-trailing-return-type.MinLength
-    value: 30

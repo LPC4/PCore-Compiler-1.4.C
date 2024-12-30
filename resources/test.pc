@@ -1,32 +1,13 @@
 program test;
 
-(int x, char y) -> int
+() -> int
 func main {
-    float z = x + y;
-
     bit boolean = 1;
-    bit boolean2 = !boolean;
+    bit boolean2 = boolean;
 
-    if condition() + 1 {
-        return 0;
-    } else {
-        return 1;
-    }
-
-    while condition() + 1 != 10 {
-        x = x + 1;
-    }
-
-    int* p = alloc(sizeof(int));
-    *p = 1;
-
-    return x+y;
+    return boolean2;
 }
 
-(int x, char y) -> int
-func condition {
-    return x + y;
-}
 
 
 
