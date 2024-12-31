@@ -96,9 +96,4 @@ void UnaryOperation::print(const std::string indent) const {
     operand->print(indent + "  ");
 }
 
-void ParenthesizedExpression::print(const std::string indent) const {
-    std::cout << indent << "Parenthesized Expression" << '\n';
-    expression->print(indent + "  ");
-}
-
 void Reference::print(const std::string indent) const { std::cout << indent << "Reference: " << name << '\n'; }

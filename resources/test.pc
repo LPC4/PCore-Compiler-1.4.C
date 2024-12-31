@@ -1,29 +1,34 @@
 program test;
 
-(int x, char y) -> int
+() -> int
 func main {
-    float z = x + y;
+    int n = 5;
+    int factorial = 1;
+    int i = 1;
 
-    bit a = 0;
-    bit b = a + a;
+    // Calculate factorial
+    while i <= n {
+        factorial = factorial * i;
+        i = i + 1;
+    }
 
-    if condition() + 1 {
-        return 0;
+    // Determine if the factorial is even or odd
+    if factorial % 2 == 0 {
+        int isEven = 1;
     } else {
-        return 1;
+        int isEven = 0;
     }
 
-    while condition() + 1 == 1 {
-        x = x + 1;
+    // Count the number of digits in the factorial
+    int digitCount = 0;
+    int temp = factorial;
+    while temp > 0 {
+        temp = temp / 10;
+        digitCount = digitCount + 1;
     }
 
-    int* p = alloc(sizeof(int));
-    *p = 1;
-
-    return x+y;
+    if digitCount > 2 {
+        return factorial;  // Return factorial if it has more than 2 digits
+    }
+    return digitCount;  // Return digit count if factorial has 2 or fewer digits
 }
-
-
-
-
-

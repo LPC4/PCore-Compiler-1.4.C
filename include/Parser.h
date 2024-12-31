@@ -10,7 +10,6 @@
 class Parser {
 public:
     Parser();
-
     // Main parse function
     std::unique_ptr<Program> parse(std::vector<Token> tokens);
 

@@ -1,0 +1,21 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "Clang",
+	"compiler-simulate-id" : "MSVC",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "E:/Utility/code/projects/cmake-build-default",
+	"dir-cur-src" : "E:/Utility/code/projects",
+	"dir-top-bld" : "E:/Utility/code/projects/cmake-build-default",
+	"dir-top-src" : "E:/Utility/code/projects",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"C:\\Program Files\\LLVM\\include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "E:/Utility/code/projects/cmake-build-default/CMakeFiles/projects.dir"
+}

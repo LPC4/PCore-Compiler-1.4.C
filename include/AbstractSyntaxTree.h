@@ -8,6 +8,12 @@
 #pragma once
 #include <iostream>
 
+#include "Visitor.h"
+
+namespace llvm {
+class Type;
+class Value;
+} // namespace llvm
 // Abstract syntax tree node forward declarations
 class AbstractNode;
 class Program;
@@ -24,7 +30,6 @@ class Reference;
 // Operation nodes
 class BinaryOperation;
 class UnaryOperation;
-class ParenthesizedExpression;
 
 // statements
 class IfStatement;
@@ -43,11 +48,29 @@ class PointerAssignment;
 class AbstractNode {
 public:
     virtual ~AbstractNode() = default;
+    AbstractNode() = default;
+    AbstractNode(const AbstractNode &node) = default;
+    AbstractNode(AbstractNode &&node) noexcept = default;
+    AbstractNode &operator=(const AbstractNode &node) = default;
+    AbstractNode &operator=(AbstractNode &&node) noexcept = default;
+
     virtual void print(std::string indent = "") const = 0;
+    virtual void accept(Visitor &visitor) = 0;
+
+    // Set and get LLVM value methods
+    void setValue(llvm::Value *value) { m_llvmValue = value; }
+    void setType(llvm::Type *type) { this->m_type = type; }
+
+    [[nodiscard]] auto getValue() const -> llvm::Value * { return m_llvmValue; }
+    [[nodiscard]] auto getType() const -> llvm::Type * { return m_type; }
+
+private:
+    llvm::Value *m_llvmValue = nullptr; // Holds the LLVM value for this node
+    llvm::Type  *m_type = nullptr;
 };
 
 // Block node, representing a sequence of statements
-class Block final : public AbstractNode {
+class Block : public AbstractNode {
 public:
     std::vector<std::unique_ptr<AbstractNode>> statements;
 
@@ -55,10 +78,11 @@ public:
     Block() = default;
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Program node, representing the entry point of the program
-class Program final : public AbstractNode {
+class Program : public AbstractNode {
 public:
     std::string            name;
     std::unique_ptr<Block> body;
@@ -67,21 +91,26 @@ public:
     Program() = default;
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Function declaration node
-class FunctionDeclaration final : public AbstractNode {
+class FunctionDeclaration : public AbstractNode {
 public:
     class Parameter;
 
     std::string            name;
     std::vector<Parameter> parameters;
     std::unique_ptr<Block> body;
+    std::string            returnType;
 
-    FunctionDeclaration(std::string name, std::vector<Parameter> parameters, std::unique_ptr<Block> body) :
-        name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)) {}
+    FunctionDeclaration(std::string name, std::vector<Parameter> parameters, std::unique_ptr<Block> body,
+                        std::string returnType) :
+        name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)),
+        returnType(std::move(returnType)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 
     class Parameter {
     public:
@@ -93,7 +122,7 @@ public:
 };
 
 // Function call node
-class FunctionCall final : public AbstractNode {
+class FunctionCall : public AbstractNode {
 public:
     std::string                                name;
     std::vector<std::unique_ptr<AbstractNode>> arguments;
@@ -102,6 +131,7 @@ public:
         name(std::move(name)), arguments(std::move(arguments)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 class VariableDeclaration : public AbstractNode {
@@ -126,10 +156,11 @@ public:
         initializer(std::move(initializer)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Literal node (e.g., numbers, strings)
-class Literal final : public AbstractNode {
+class Literal : public AbstractNode {
 public:
     std::string value;
     std::string type;
@@ -137,10 +168,11 @@ public:
     explicit Literal(std::string value, std::string type) : value(std::move(value)), type(std::move(type)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Reference node (e.g., variable names, function names)
-class Reference final : public AbstractNode {
+class Reference : public AbstractNode {
 public:
     std::string name;
     bool        isReference;
@@ -148,10 +180,11 @@ public:
     explicit Reference(std::string name, const bool isReference) : name(std::move(name)), isReference(isReference) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Binary operation node (e.g., a + b)
-class BinaryOperation final : public AbstractNode {
+class BinaryOperation : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> left;
     std::string                   operatorSymbol;
@@ -162,10 +195,11 @@ public:
         left(std::move(left)), operatorSymbol(std::move(operatorSymbol)), right(std::move(right)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Unary operation node (e.g., -a)
-class UnaryOperation final : public AbstractNode {
+class UnaryOperation : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> operand;
     std::string                   operatorSymbol;
@@ -174,20 +208,11 @@ public:
         operand(std::move(operand)), operatorSymbol(std::move(operatorSymbol)) {}
 
     void print(std::string indent) const override;
-};
-
-// Parenthesized expression node
-class ParenthesizedExpression final : public AbstractNode {
-public:
-    std::unique_ptr<AbstractNode> expression;
-
-    ParenthesizedExpression(std::unique_ptr<AbstractNode> expression) : expression(std::move(expression)) {}
-
-    void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // If statement node
-class IfStatement final : public AbstractNode {
+class IfStatement : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> condition;
     std::unique_ptr<Block>        thenBranch;
@@ -198,10 +223,11 @@ public:
         condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // While loop node
-class WhileLoop final : public AbstractNode {
+class WhileLoop : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> condition;
     std::unique_ptr<Block>        body;
@@ -210,30 +236,33 @@ public:
         condition(std::move(condition)), body(std::move(body)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Return statement node
-class ReturnStatement final : public AbstractNode {
+class ReturnStatement : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> expression;
 
     explicit ReturnStatement(std::unique_ptr<AbstractNode> expression) : expression(std::move(expression)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Expression statement node (e.g., standalone expressions in a block)
-class ExpressionStatement final : public AbstractNode {
+class ExpressionStatement : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> expression;
 
     explicit ExpressionStatement(std::unique_ptr<AbstractNode> expression) : expression(std::move(expression)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Assignment node
-class Assignment final : public AbstractNode {
+class Assignment : public AbstractNode {
 public:
     std::string                   name;
     std::unique_ptr<AbstractNode> value;
@@ -243,10 +272,11 @@ public:
         name(std::move(name)), value(std::move(value)), isPointerDereference(isPointerDereference) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Memory allocation node
-class MemoryAllocation final : public AbstractNode {
+class MemoryAllocation : public AbstractNode {
 public:
     std::string                   type;
     std::unique_ptr<AbstractNode> sizeExpression;
@@ -255,30 +285,33 @@ public:
         type(std::move(type)), sizeExpression(std::move(sizeExpression)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Memory deallocation node
-class MemoryDeallocation final : public AbstractNode {
+class MemoryDeallocation : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> pointer;
 
     explicit MemoryDeallocation(std::unique_ptr<AbstractNode> pointer) : pointer(std::move(pointer)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Pointer access node
-class PointerAccess final : public AbstractNode {
+class PointerAccess : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> pointer;
 
     explicit PointerAccess(std::unique_ptr<AbstractNode> pointer) : pointer(std::move(pointer)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
 
 // Pointer assignment node
-class PointerAssignment final : public AbstractNode {
+class PointerAssignment : public AbstractNode {
 public:
     std::unique_ptr<AbstractNode> pointer;
     std::unique_ptr<AbstractNode> value;
@@ -287,4 +320,5 @@ public:
         pointer(std::move(pointer)), value(std::move(value)) {}
 
     void print(std::string indent) const override;
+    void accept(Visitor &visitor) override { visitor.visit(*this); }
 };

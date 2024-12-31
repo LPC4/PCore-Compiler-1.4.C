@@ -1,9 +1,0 @@
-# ninja log v6
-12	1164	7570212696725219	CMakeFiles/projects.dir/src/ast/AbstractSyntaxTree.cpp.obj	aaf9a42bbad8bf4e
-6	1119	7570777139348797	CMakeFiles/projects.dir/src/AbstractSyntaxTree.cpp.obj	fb965023a8882dd4
-6	91	7570783212448430	CMakeFiles/projects.dir/src/CodeGenerator.cpp.obj	6d62b48482faa0a1
-3347	4246	7570785404089862	projects.exe	9b88b7da940e22f7
-6	3347	7570785370669467	CMakeFiles/projects.dir/src/Parser.cpp.obj	303d6e78f6bd1947
-3	273	7570833350219486	build.ninja	53b31b2e0213f132
-15	1901	7570783212528449	CMakeFiles/projects.dir/src/main.cpp.obj	2edfd3bf39783287
-10	1872	7570234275193449	CMakeFiles/projects.dir/src/Tokenizer.cpp.obj	a3d51f3fa560aa94

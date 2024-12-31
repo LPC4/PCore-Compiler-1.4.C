@@ -16,7 +16,6 @@ auto Parser::parseProgram() -> std::unique_ptr<Program> {
     consume(TokenType::Keyword, "program");
 
     const std::string programName = peek().getValue();
-    printf("Program name: %s\n", programName.c_str());
 
     consume(TokenType::Identifier);
     consume(";");
@@ -65,13 +64,13 @@ auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> 
         advance(); // consume "("
 
         while (!match(TokenType::Symbol, ")")) {
-            std::string type = peek().getValue();
+            const std::string type = peek().getValue();
             consume(TokenType::Identifier);
 
-            std::string name = peek().getValue();
+            const std::string name = peek().getValue();
             consume(TokenType::Identifier);
 
-            parameters.emplace_back(type, name);
+            parameters.emplace_back(FunctionDeclaration::Parameter{type, name});
 
             if (match(TokenType::Symbol, ",")) {
                 advance(); // consume ","
@@ -79,7 +78,7 @@ auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> 
         }
         consume(TokenType::Symbol, ")");
         consume(TokenType::Symbol, "->");
-        std::string type = peek().getValue();
+        returnType = peek().getValue();
         consume(TokenType::Identifier);
     }
 
@@ -100,7 +99,7 @@ auto Parser::parseFunctionDeclaration() -> std::unique_ptr<FunctionDeclaration> 
 
     consume(TokenType::Symbol, "}");
 
-    return std::make_unique<FunctionDeclaration>(name, parameters, std::move(body));
+    return std::make_unique<FunctionDeclaration>(name, parameters, std::move(body), returnType);
 }
 
 auto Parser::parseStatement() -> std::unique_ptr<AbstractNode> {
@@ -260,8 +259,6 @@ auto Parser::parseIfStatement() -> std::unique_ptr<IfStatement> {
     consume(TokenType::Keyword, "if");
 
     auto condition = parseExpression();
-
-    printf("current token: %s\n", peek().getValue().c_str());
 
     auto thenBranch = parseBlock();
 

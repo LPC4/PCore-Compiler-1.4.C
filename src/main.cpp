@@ -1,9 +1,10 @@
 #include <string>
 
+#include "../include/CodeGenerator.h"
 #include "../include/Parser.h"
 #include "../include/Tokenizer.h"
 
-enum ExitCode : std::uint8_t { SUCCESS = 0, TOKENIZER_ERROR = 1, PARSER_ERROR = 2 };
+enum ExitCode : std::uint8_t { SUCCESS = 0, TOKENIZER_ERROR = 1, PARSER_ERROR = 2, IR_ERROR = 3 };
 
 const static std::string NAME = "PCore Compiler";
 const static std::string VERSION = "1.4.0";
@@ -16,16 +17,16 @@ static int compile(const std::string &filepath) {
     try {
         Tokenizer tokenizer(filepath);
         tokens = tokenizer.tokenize();
+
+        // For debugging purposes
+        for (const Token &token : tokens) {
+            token.print();
+        }
+
+        printf("//---------------------- Tokenization successful ----------------------//\n");
     } catch (const std::runtime_error &e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return TOKENIZER_ERROR;
-    }
-
-    printf("Tokenization successful\n");
-
-    // For debugging purposes
-    for (const Token &token : tokens) {
-        token.print();
     }
 
     // Parse tokens
@@ -33,19 +34,49 @@ static int compile(const std::string &filepath) {
     try {
         Parser parser;
         program = parser.parse(tokens);
+
+        program->print("");
+
+        printf("//---------------------- Parsing successful ----------------------//\n");
+
     } catch (const std::runtime_error &e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return PARSER_ERROR;
     }
 
-    printf("Parsing successful\n");
+    // Generate intermediate representation
+    try {
+        CodeGenerator codeGenerator;
+        codeGenerator.generateCode(program);
 
-    program->print("");
+        printf("//---------------------- IR generation successful ----------------------//\n");
 
-    // todo: generate intermediate code in LLVM IR
+    } catch (const std::runtime_error &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
+        return IR_ERROR;
+    }
+
+    // todo: generate intermediate representation in LLVM IR
     // todo: generate executable
 
     return SUCCESS;
+}
+
+void compileAndRun() {
+    // Command to execute
+    std::string command = "powershell.exe -Command \"cd E:\\Utility\\code\\projects; "
+                          "llc -filetype=obj output.ll -o output.o; "
+                          "clang output.o -o output.exe; "
+                          "./output.exe; "
+                          "echo $LASTEXITCODE\"";
+
+    int result = system(command.c_str());
+
+    if (result == 0) {
+        std::cout << "Commands executed successfully." << std::endl;
+    } else {
+        std::cerr << "Error executing commands. Exit code: " << result << std::endl;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -53,5 +84,12 @@ int main(int argc, char *argv[]) {
 
     printf("%s v%s by %s\n", NAME.c_str(), VERSION.c_str(), AUTHOR.c_str());
 
-    return compile("../resources/test.pc");
+    const int exitCode = compile("../resources/test.pc");
+
+    if (exitCode == SUCCESS) {
+        compileAndRun();
+    }
+
+    return exitCode;
 }
+
