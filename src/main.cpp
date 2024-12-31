@@ -47,7 +47,7 @@ static int compile(const std::string &filepath) {
     // Generate intermediate representation
     try {
         CodeGenerator codeGenerator;
-        codeGenerator.generateCode(std::move(program));
+        codeGenerator.generateCode(program);
 
         printf("//---------------------- IR generation successful ----------------------//\n");
 
@@ -62,10 +62,34 @@ static int compile(const std::string &filepath) {
     return SUCCESS;
 }
 
+void compileAndRun() {
+    // Command to execute
+    std::string command = "powershell.exe -Command \"cd E:\\Utility\\code\\projects; "
+                          "llc -filetype=obj output.ll -o output.o; "
+                          "clang output.o -o output.exe; "
+                          "./output.exe; "
+                          "echo $LASTEXITCODE\"";
+
+    int result = system(command.c_str());
+
+    if (result == 0) {
+        std::cout << "Commands executed successfully." << std::endl;
+    } else {
+        std::cerr << "Error executing commands. Exit code: " << result << std::endl;
+    }
+}
+
 int main(int argc, char *argv[]) {
     // todo: add command line arguments
 
     printf("%s v%s by %s\n", NAME.c_str(), VERSION.c_str(), AUTHOR.c_str());
 
-    return compile("../resources/test.pc");
+    const int exitCode = compile("../resources/test.pc");
+
+    if (exitCode == SUCCESS) {
+        compileAndRun();
+    }
+
+    return exitCode;
 }
+

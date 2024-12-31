@@ -1,16 +1,15 @@
 #include "../include/CodeGenerator.h"
 
-CodeGenerator::CodeGenerator() : context(), module(), builder(context) {}
+CodeGenerator::CodeGenerator() : builder(context) {}
 
 void CodeGenerator::generateCode(const std::unique_ptr<Program> &program) {
     program->accept(*this);
 
-    std::error_code EC;
-    llvm::raw_fd_ostream file("output.ll", EC, llvm::sys::fs::OF_None);
+    std::error_code      errorCode;
+    llvm::raw_fd_ostream file("../output.ll", errorCode, llvm::sys::fs::OF_None);
 
-    // Check for errors in file creation
-    if (EC) {
-        llvm::errs() << "Could not open file: " << EC.message() << "\n";
+    if (errorCode) {
+        llvm::errs() << "Could not open file: " << errorCode.message() << "\n";
         return;
     }
 
@@ -18,8 +17,6 @@ void CodeGenerator::generateCode(const std::unique_ptr<Program> &program) {
     module->print(file, nullptr);
     module->print(llvm::outs(), nullptr);
 }
-
-
 
 void CodeGenerator::visit(Program &node) {
     module = std::make_unique<llvm::Module>(node.name, context);
@@ -62,20 +59,26 @@ void CodeGenerator::visit(FunctionDeclaration &node) {
 
 void CodeGenerator::visit(VariableDeclaration &node) {
     llvm::Type *varType = typeToLLVMType(node.type);
-    if (!varType) {
+    if (varType == nullptr) {
         llvm::errs() << "Unknown type: " << node.type << "\n";
         return;
     }
 
-    llvm::Function *function = builder.GetInsertBlock()->getParent();
+    llvm::Function   *function = builder.GetInsertBlock()->getParent();
     llvm::IRBuilder<> tmpBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
     llvm::AllocaInst *alloca = tmpBuilder.CreateAlloca(varType, nullptr, node.name);
     namedValues[node.name] = alloca;
+    namedTypes[node.name] = varType;
 
     if (node.initializer) {
         node.initializer->accept(*this);
-        llvm::Value *value = node.initializer->getLLVMValue();
-        if (value) {
+        llvm::Value *value = node.initializer->getValue();
+
+        if (value->getType()->isPointerTy()) {
+            value = builder.CreateLoad(node.initializer->getType(), value, node.name);
+        }
+
+        if (value != nullptr) {
             builder.CreateStore(value, alloca);
         } else {
             llvm::errs() << "Failed to generate initializer for variable: " << node.name << "\n";
@@ -87,7 +90,7 @@ void CodeGenerator::visit(FunctionCall &node) {
     std::vector<llvm::Value *> args;
     for (const auto &arg : node.arguments) {
         arg->accept(*this);
-        llvm::Value *argValue = arg->getLLVMValue();
+        llvm::Value *argValue = arg->getValue();
         if (argValue) {
             args.push_back(argValue);
         } else {
@@ -108,25 +111,36 @@ void CodeGenerator::visit(FunctionCall &node) {
 void CodeGenerator::visit(Literal &node) {
     llvm::Value *value = getValueFromLiteral(node.value, node.type);
 
-
-    node.setLLVMValue(value); // Store the generated value in the node
+    node.setValue(value);
+    node.setType(typeToLLVMType(node.type));
 }
 
 void CodeGenerator::visit(Reference &node) {
     // Generate code for the variable reference
     llvm::Value *value = namedValues[node.name];
-    if (!value) {
+    llvm::Type  *type = namedTypes[node.name];
+    if (!value || !type) {
         llvm::errs() << "Unknown variable name: " << node.name << "\n";
     }
-    node.setLLVMValue(value); // Store the generated value in the node
+    node.setValue(value); // Store the generated value in the node
+    node.setType(type);       // Store the type in the node
 }
 
 void CodeGenerator::visit(BinaryOperation &node) {
     // Generate code for the left and right operands
     node.left->accept(*this);
-    llvm::Value *leftValue = node.left->getLLVMValue();
+    llvm::Value *leftValue = node.left->getValue();
+
+    if (leftValue->getType()->isPointerTy()) {
+        leftValue = builder.CreateLoad(node.left->getType(), leftValue, "loadLeftTmp");
+    }
+
     node.right->accept(*this);
-    llvm::Value *rightValue = node.right->getLLVMValue();
+    llvm::Value *rightValue = node.right->getValue();
+
+    if (rightValue->getType()->isPointerTy()) {
+        rightValue = builder.CreateLoad(node.right->getType(), rightValue, "loadRightTmp");
+    }
 
     // Generate code for the binary operation
     llvm::Value *result = nullptr;
@@ -138,14 +152,39 @@ void CodeGenerator::visit(BinaryOperation &node) {
         result = builder.CreateMul(leftValue, rightValue, "multmp");
     } else if (node.operatorSymbol == "/") {
         result = builder.CreateSDiv(leftValue, rightValue, "divtmp");
+    } else if (node.operatorSymbol == "==") {
+        result = builder.CreateICmpEQ(leftValue, rightValue, "eqtmp");
+    } else if (node.operatorSymbol == "!=") {
+        result = builder.CreateICmpNE(leftValue, rightValue, "netmp");
+    } else if (node.operatorSymbol == "<") {
+        result = builder.CreateICmpSLT(leftValue, rightValue, "lttmp");
+    } else if (node.operatorSymbol == "<=") {
+        result = builder.CreateICmpSLE(leftValue, rightValue, "letmp");
+    } else if (node.operatorSymbol == ">") {
+        result = builder.CreateICmpSGT(leftValue, rightValue, "gttmp");
+    } else if (node.operatorSymbol == ">=") {
+        result = builder.CreateICmpSGE(leftValue, rightValue, "getmp");
+    } else if (node.operatorSymbol == "%") {
+        result = builder.CreateSRem(leftValue, rightValue, "modtmp");
+    } else if (node.operatorSymbol == "&&") {
+        result = builder.CreateAnd(leftValue, rightValue, "andtmp");
+    } else if (node.operatorSymbol == "||") {
+        result = builder.CreateOr(leftValue, rightValue, "ortmp");
     }
-    node.setLLVMValue(result); // Store the generated value in the node
+
+    if (result == nullptr) {
+        llvm::errs() << "Unknown binary operator: " << node.operatorSymbol << "\n";
+        throw std::runtime_error("Unknown binary operator: " + node.operatorSymbol);
+    }
+
+    node.setValue(result); // Store the generated value in the node
+    node.setType(result->getType()); // Store the type in the node
 }
 
 void CodeGenerator::visit(UnaryOperation &node) {
     // Generate code for the operand
     node.operand->accept(*this);
-    llvm::Value *operandValue = node.operand->getLLVMValue();
+    llvm::Value *operandValue = node.operand->getValue();
 
     // Generate code for the unary operation
     llvm::Value *result = nullptr;
@@ -155,16 +194,16 @@ void CodeGenerator::visit(UnaryOperation &node) {
     if (node.operatorSymbol == "!") {
         result = builder.CreateNot(operandValue, "nottmp");
     }
-    node.setLLVMValue(result); // Store the generated value in the node
+    node.setValue(result); // Store the generated value in the node
 }
 
 void CodeGenerator::visit(IfStatement &node) {
     // Generate code for the condition
     node.condition->accept(*this);
-    llvm::Value *condValue = node.condition->getLLVMValue();
+    llvm::Value *condValue = node.condition->getValue();
 
     // Create blocks for the then and else cases
-    llvm::Function *function = builder.GetInsertBlock()->getParent();
+    llvm::Function   *function = builder.GetInsertBlock()->getParent();
     llvm::BasicBlock *thenBlock = llvm::BasicBlock::Create(context, "then", function);
     llvm::BasicBlock *elseBlock = llvm::BasicBlock::Create(context, "else", function);
     llvm::BasicBlock *mergeBlock = llvm::BasicBlock::Create(context, "ifcont", function);
@@ -188,10 +227,9 @@ void CodeGenerator::visit(IfStatement &node) {
     builder.SetInsertPoint(mergeBlock);
 }
 
-
 void CodeGenerator::visit(WhileLoop &node) {
     // Create blocks for the loop header, body, and exit
-    llvm::Function *function = builder.GetInsertBlock()->getParent();
+    llvm::Function   *function = builder.GetInsertBlock()->getParent();
     llvm::BasicBlock *headerBlock = llvm::BasicBlock::Create(context, "loop", function);
     llvm::BasicBlock *bodyBlock = llvm::BasicBlock::Create(context, "loopbody", function);
     llvm::BasicBlock *exitBlock = llvm::BasicBlock::Create(context, "loopexit", function);
@@ -202,7 +240,7 @@ void CodeGenerator::visit(WhileLoop &node) {
     // Generate code for the loop header
     builder.SetInsertPoint(headerBlock);
     node.condition->accept(*this);
-    llvm::Value *condValue = node.condition->getLLVMValue();
+    llvm::Value *condValue = node.condition->getValue();
     builder.CreateCondBr(condValue, bodyBlock, exitBlock);
 
     // Generate code for the loop body
@@ -213,13 +251,18 @@ void CodeGenerator::visit(WhileLoop &node) {
     // Generate code for the loop exit
     builder.SetInsertPoint(exitBlock);
 }
-
-
 void CodeGenerator::visit(ReturnStatement &node) {
     // Generate code for the return value
     if (node.expression) {
         node.expression->accept(*this);
-        llvm::Value *returnValue = node.expression->getLLVMValue();
+        llvm::Value *returnValuePointer = node.expression->getValue();
+
+        // Load the return value if it is a pointer
+        llvm::Value *returnValue = returnValuePointer;
+        if (returnValuePointer->getType()->isPointerTy()) {
+            returnValue = builder.CreateLoad(node.expression->getType(), returnValuePointer, "loadtmp");
+        }
+
         builder.CreateRet(returnValue);
     } else {
         builder.CreateRetVoid();
@@ -234,7 +277,13 @@ void CodeGenerator::visit(ExpressionStatement &node) {
 void CodeGenerator::visit(Assignment &node) {
     // Generate code for the value to be assigned
     node.value->accept(*this);
-    llvm::Value *value = node.value->getLLVMValue();
+    llvm::Value *valuePointer = node.value->getValue();
+
+    // Load the value from the pointer if it is a pointer
+    llvm::Value *value = valuePointer;
+    if (valuePointer->getType()->isPointerTy()) {
+        value = builder.CreateLoad(node.value->getType(), valuePointer, "loadtmp");
+    }
 
     // Generate code for the variable reference
     llvm::Value *variable = namedValues[node.name];
@@ -261,7 +310,7 @@ void CodeGenerator::visit(PointerAssignment &node) {
     // Empty
 }
 
-llvm::Type *CodeGenerator::typeToLLVMType(const std::string &type) {
+auto CodeGenerator::typeToLLVMType(const std::string &type) -> llvm::Type * {
     // to lowercase
     std::string type2 = type;
     std::ranges::transform(type2, type2.begin(), ::tolower);
@@ -290,12 +339,12 @@ llvm::Type *CodeGenerator::typeToLLVMType(const std::string &type) {
     return nullptr;
 }
 
-llvm::Value* CodeGenerator::getValueFromLiteral(const std::string &value, const std::string &type) {
+auto CodeGenerator::getValueFromLiteral(const std::string &value, const std::string &type) -> llvm::Value * {
     llvm::Type *llvmType = typeToLLVMType(type);
-    if (!llvmType) {
+    if (llvmType == nullptr) {
+        llvm::errs() << "Unknown type: " << type << "\n";
         return nullptr;
     }
-
     if (llvmType->isIntegerTy()) {
         return llvm::ConstantInt::get(llvmType, std::stoi(value));
     }

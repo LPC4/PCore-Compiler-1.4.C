@@ -2,16 +2,33 @@ program test;
 
 () -> int
 func main {
-    bit boolean = 1;
-    bit boolean2 = boolean;
+    int n = 5;
+    int factorial = 1;
+    int i = 1;
 
-    return boolean2;
+    // Calculate factorial
+    while i <= n {
+        factorial = factorial * i;
+        i = i + 1;
+    }
+
+    // Determine if the factorial is even or odd
+    if factorial % 2 == 0 {
+        int isEven = 1;
+    } else {
+        int isEven = 0;
+    }
+
+    // Count the number of digits in the factorial
+    int digitCount = 0;
+    int temp = factorial;
+    while temp > 0 {
+        temp = temp / 10;
+        digitCount = digitCount + 1;
+    }
+
+    if digitCount > 2 {
+        return factorial;  // Return factorial if it has more than 2 digits
+    }
+    return digitCount;  // Return digit count if factorial has 2 or fewer digits
 }
-
-
-
-
-
-
-
-

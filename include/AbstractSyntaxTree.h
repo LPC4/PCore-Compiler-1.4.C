@@ -11,8 +11,9 @@
 #include "Visitor.h"
 
 namespace llvm {
+class Type;
 class Value;
-}
+} // namespace llvm
 // Abstract syntax tree node forward declarations
 class AbstractNode;
 class Program;
@@ -57,11 +58,15 @@ public:
     virtual void accept(Visitor &visitor) = 0;
 
     // Set and get LLVM value methods
-    void         setLLVMValue(llvm::Value *value) { llvmValue = value; }
-    llvm::Value *getLLVMValue() const { return llvmValue; }
+    void setValue(llvm::Value *value) { m_llvmValue = value; }
+    void setType(llvm::Type *type) { this->m_type = type; }
+
+    [[nodiscard]] auto getValue() const -> llvm::Value * { return m_llvmValue; }
+    [[nodiscard]] auto getType() const -> llvm::Type * { return m_type; }
 
 private:
-    llvm::Value *llvmValue = nullptr; // Holds the LLVM value for this node
+    llvm::Value *m_llvmValue = nullptr; // Holds the LLVM value for this node
+    llvm::Type  *m_type = nullptr;
 };
 
 // Block node, representing a sequence of statements

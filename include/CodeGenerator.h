@@ -20,12 +20,13 @@ public:
     std::unique_ptr<llvm::Module>                  module;
     llvm::IRBuilder<>                              builder;
     std::unordered_map<std::string, llvm::Value *> namedValues;
+    std::unordered_map<std::string, llvm::Type *>  namedTypes;
 
     CodeGenerator();
     void generateCode(const std::unique_ptr<Program> &program);
 
-    llvm::Type  *typeToLLVMType(const std::string &type);
-    llvm::Value *getValueFromLiteral(const std::string &value, const std::string &type);
+    auto typeToLLVMType(const std::string &type) -> llvm::Type  *;
+    auto getValueFromLiteral(const std::string &value, const std::string &type) -> llvm::Value *;
 
     // Visitor functions
     void visit(Block &node) override;
