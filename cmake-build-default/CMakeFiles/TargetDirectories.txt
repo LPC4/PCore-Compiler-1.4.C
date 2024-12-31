@@ -1,0 +1,10 @@
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/intrinsics_gen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/omp_gen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/acc_gen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/ARMTargetParserTableGen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/AArch64TargetParserTableGen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/RISCVTargetParserTableGen.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/clang-tablegen-targets.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/compiler.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/edit_cache.dir
+E:/Utility/code/projects/cmake-build-default/CMakeFiles/rebuild_cache.dir

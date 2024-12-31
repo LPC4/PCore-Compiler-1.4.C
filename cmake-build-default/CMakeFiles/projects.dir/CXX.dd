@@ -1,0 +1,13 @@
+ninja_dyndep_version = 1.0
+build CMakeFiles/projects.dir/src/AbstractSyntaxTree.cpp.obj: dyndep
+
+build CMakeFiles/projects.dir/src/CodeGenerator.cpp.obj: dyndep
+
+build CMakeFiles/projects.dir/src/IntermediateRepresentation.cpp.obj: dyndep
+
+build CMakeFiles/projects.dir/src/Parser.cpp.obj: dyndep
+
+build CMakeFiles/projects.dir/src/Tokenizer.cpp.obj: dyndep
+
+build CMakeFiles/projects.dir/src/main.cpp.obj: dyndep
+
