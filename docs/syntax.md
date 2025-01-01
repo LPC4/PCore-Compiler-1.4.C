@@ -4,7 +4,7 @@
 - A program starts with the keyword `program` followed by the program's name.
 - Example:
   ```c++
-  program main
+  program main;
   
   main {
       print("Hello, World!");
@@ -25,7 +25,7 @@
   ```c++
   int x = 42;
   float y = 3.14;
-  string name = "Liam";
+  char* name = "Liam";
   bit flag = 1;
   int x = y; // Implicit conversion, x = 3
   ```
@@ -110,6 +110,7 @@
   ```c++
   ptr x = alloc(sizeof(int) * 10); // Allocate memory for 10 integers
   *x = 42; // Assign value
+  *(x + 1) = 43; // Assign value
   print(*x); // Access value
   free(x); // Free memory
   ```

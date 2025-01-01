@@ -2,6 +2,8 @@
 
 #include "../include/CodeGenerator.h"
 
+#include <set>
+
 using namespace llvm;
 
 CodeGenerator::CodeGenerator() : builder(context) {}
@@ -102,7 +104,41 @@ void CodeGenerator::visit(VariableDeclaration &node) {
     }
 }
 
+static const std::set<std::string> BUILT_IN_FUNCTIONS = {"printf"};
+
 void CodeGenerator::visit(FunctionCall &node) {
+    if (BUILT_IN_FUNCTIONS.contains(node.name)) {
+        // Handle built-in functions
+        if (node.name == "printf") {
+            // Handle printf
+            std::vector<Value *> args;
+            for (const auto &arg : node.arguments) {
+                arg->accept(*this);
+                Value *argValue = arg->getValue();
+
+                if (argValue->getType()->isPointerTy()) {
+                    argValue = builder.CreateLoad(arg->getType(), argValue, "loadArgTmp");
+                }
+
+                if (argValue != nullptr) {
+                    args.push_back(argValue);
+                } else {
+                    errs() << "Failed to generate argument for printf\n";
+                    return;
+                }
+            }
+
+            FunctionCallee printfFunc = module->getOrInsertFunction(
+                    "printf", FunctionType::get(IntegerType::getInt32Ty(context),
+                                                PointerType::get(Type::getInt8Ty(context), 0), true));
+
+            Value *result = builder.CreateCall(printfFunc, args, "printfResultTmp");
+            node.setValue(result);
+            node.setType(result->getType());
+        }
+        return;
+    }
+
     Function *function = module->getFunction(node.name);
     if (function == nullptr) {
         errs() << "Function not found: " << node.name << "\n";
@@ -182,7 +218,6 @@ void CodeGenerator::visit(BinaryOperation &node) {
 }
 
 void CodeGenerator::visit(UnaryOperation &node) {
-    // Generate code for the operand
     node.operand->accept(*this);
     Value *operandValue = node.operand->getValue();
 
@@ -190,7 +225,6 @@ void CodeGenerator::visit(UnaryOperation &node) {
         operandValue = builder.CreateLoad(node.operand->getType(), operandValue, "loadOperandTmp");
     }
 
-    // Generate code for the unary operation
     Value *result = getUnaryLLVM(node.operatorSymbol, operandValue);
 
     if (result == nullptr) {
@@ -203,57 +237,46 @@ void CodeGenerator::visit(UnaryOperation &node) {
 }
 
 void CodeGenerator::visit(IfStatement &node) {
-    // Generate code for the condition
-    node.condition->accept(*this);
-    Value *condValue = node.condition->getValue();
-
-    // Create blocks for the then and else cases
     Function   *function = builder.GetInsertBlock()->getParent();
     BasicBlock *thenBlock = BasicBlock::Create(context, "then", function);
     BasicBlock *elseBlock = BasicBlock::Create(context, "else", function);
     BasicBlock *mergeBlock = BasicBlock::Create(context, "ifCont", function);
 
-    // Generate conditional branch instruction
+    node.condition->accept(*this);
+    Value *condValue = node.condition->getValue();
+
     builder.CreateCondBr(condValue, thenBlock, elseBlock);
 
-    // Generate code for the then block
     builder.SetInsertPoint(thenBlock);
-    node.thenBranch->accept(*this);
+        node.thenBranch->accept(*this);
     builder.CreateBr(mergeBlock);
 
-    // Generate code for the else block
     builder.SetInsertPoint(elseBlock);
-    if (node.elseBranch) {
-        node.elseBranch->accept(*this);
-    }
+        if (node.elseBranch) {
+            node.elseBranch->accept(*this);
+        }
     builder.CreateBr(mergeBlock);
 
-    // Generate code for the merge block
     builder.SetInsertPoint(mergeBlock);
 }
 
 void CodeGenerator::visit(WhileLoop &node) {
-    // Create blocks for the loop header, body, and exit
     Function   *function = builder.GetInsertBlock()->getParent();
     BasicBlock *headerBlock = BasicBlock::Create(context, "loop", function);
     BasicBlock *bodyBlock = BasicBlock::Create(context, "loopBody", function);
     BasicBlock *exitBlock = BasicBlock::Create(context, "loopExit", function);
 
-    // Generate unconditional branch to the loop header
     builder.CreateBr(headerBlock);
 
-    // Generate code for the loop header
     builder.SetInsertPoint(headerBlock);
-    node.condition->accept(*this);
-    Value *condValue = node.condition->getValue();
+        node.condition->accept(*this);
+        Value *condValue = node.condition->getValue();
     builder.CreateCondBr(condValue, bodyBlock, exitBlock);
 
-    // Generate code for the loop body
     builder.SetInsertPoint(bodyBlock);
-    node.body->accept(*this);
+        node.body->accept(*this);
     builder.CreateBr(headerBlock);
 
-    // Generate code for the loop exit
     builder.SetInsertPoint(exitBlock);
 }
 
@@ -285,13 +308,13 @@ void CodeGenerator::visit(Assignment &node) {
     node.value->accept(*this);
     Value *valuePointer = node.value->getValue();
 
-    // Load the value from the pointer if it is a pointer (literals are stored directly)
+
     Value *value = valuePointer;
-    if (valuePointer->getType()->isPointerTy()) {
+    // todo: check if the value is a pointer and dereference it
+    if (valuePointer->getType()->isPointerTy() /* && node.isPointerDereference */) {
         value = builder.CreateLoad(node.value->getType(), valuePointer, "loadTmp");
     }
 
-    // Retrieve the variable's pointer and type
     Value *variable = refNameToValue[node.name];
     Type  *variableType = refNameToType[node.name];
 
@@ -300,14 +323,12 @@ void CodeGenerator::visit(Assignment &node) {
         return;
     }
 
-    // Perform type conversion if necessary using implitConvert method
     value = implicitConvert(value, variableType, node.name);
     if (!value) {
         errs() << "Failed to convert value for: " << node.name << "\n";
         return;
     }
 
-    // Store the value into the variable
     builder.CreateStore(value, variable);
 }
 
@@ -319,16 +340,13 @@ auto CodeGenerator::typeToLLVMType(const std::string &type) -> Type * {
     if (type2 == "char" || type2 == "byte") {
         return Type::getInt8Ty(context);
     }
-    if (type2 == "integer" || type2 == "int") {
+    if (type2 == "int" || type2 == "integer") {
         return Type::getInt32Ty(context);
-    }
-    if (type2 == "double") {
-        return Type::getDoubleTy(context);
     }
     if (type2 == "float") {
         return Type::getFloatTy(context);
     }
-    if (type2 == "bit" || type2 == "bool" || type2 == "boolean") {
+    if (type2 == "bit") {
         return Type::getInt1Ty(context);
     }
     if (type2 == "void") {
@@ -342,21 +360,32 @@ auto CodeGenerator::typeToLLVMType(const std::string &type) -> Type * {
 
 auto CodeGenerator::getValueFromLiteral(const std::string &value, const std::string &type) -> Value * {
     Type *llvmType = typeToLLVMType(type);
-    if (llvmType == nullptr) {
+    if (!llvmType) {
         errs() << "Unknown type: " << type << "\n";
         return nullptr;
     }
 
-    if (llvmType->isIntegerTy())
+    if (llvmType->isIntegerTy()) {
+        if (type == "char") {
+            return ConstantInt::get(llvmType, static_cast<uint32_t>(value[0]));
+        }
         return ConstantInt::get(llvmType, std::stoi(value));
-    if (llvmType->isFloatTy())
+    }
+    if (llvmType->isFloatTy()) {
         return ConstantFP::get(context, APFloat(std::stof(value)));
-    if (llvmType->isDoubleTy())
+    }
+    if (llvmType->isDoubleTy()) {
         return ConstantFP::get(context, APFloat(std::stod(value)));
-    if (llvmType->isPointerTy())
+    }
+    if (llvmType->isPointerTy()) {
+        if (type == "string") {
+            return builder.CreateGlobalStringPtr(value);
+        }
         return ConstantPointerNull::get(static_cast<PointerType *>(llvmType));
-    if (llvmType->isVoidTy())
+    }
+    if (llvmType->isVoidTy()) {
         return nullptr;
+    }
 
     return nullptr;
 }
@@ -400,33 +429,39 @@ auto CodeGenerator::getBinaryLLVM(const std::string &op, Value *leftValue, Value
         return builder.CreateAnd(leftValue, rightValue, "andTmp");
     if (op == "||")
         return builder.CreateOr(leftValue, rightValue, "orTmp");
+    if (op == "<<")
+        return builder.CreateShl(leftValue, rightValue, "shlTmp");
+    if (op == ">>")
+        return builder.CreateAShr(leftValue, rightValue, "ashrTmp");
     return nullptr;
 }
 
 auto CodeGenerator::getUnaryLLVM(const std::string &op, Value *value) -> Value * {
     if (op == "-") {
         if (value->getType()->isFloatingPointTy()) {
-            return builder.CreateFNeg(value, "fnegTmp");  // Negate floating-point value
-        } else {
-            return builder.CreateNeg(value, "negTmp");    // Negate integer value
+            return builder.CreateFNeg(value, "fnegTmp"); // Negate floating-point value
         }
+        if (value->getType()->isIntegerTy()) {
+            return builder.CreateNeg(value, "negTmp"); // Negate integer value
+        }
+        throw std::runtime_error("Unknown type for unary operator: " + op);
     }
     if (op == "!") {
-        return builder.CreateNot(value, "notTmp");        // Logical NOT
+        return builder.CreateNot(value, "notTmp"); // Logical NOT
     }
     return nullptr;
 }
 
+constexpr int NUM_SIZE_BIT = 32;
 
 auto CodeGenerator::implicitConvert(Value *value, Type *targetType, const std::string &name) -> Value * {
-    const Type *valueType = value->getType();
 
-    if (valueType != targetType) {
-        if (valueType->isIntegerTy(32) && targetType->isFloatTy()) {
-            return builder.CreateSIToFP(value, targetType, name + ".sitofpTmp"); // Convert 32-bit int to float
+    if (const Type *valueType = value->getType(); valueType != targetType) {
+        if (valueType->isIntegerTy(NUM_SIZE_BIT) && targetType->isFloatTy()) {
+            return builder.CreateSIToFP(value, targetType, name + ".castIntToFloatTmp"); // Convert 32-bit int to float
         }
-        if (valueType->isFloatTy() && targetType->isIntegerTy(32)) {
-            return builder.CreateFPToSI(value, targetType, name + ".fptosiTmp"); // Convert float to 32-bit int
+        if (valueType->isFloatTy() && targetType->isIntegerTy(NUM_SIZE_BIT)) {
+            return builder.CreateFPToSI(value, targetType, name + ".castFloatToIntTmp"); // Convert float to 32-bit int
         }
 
         errs() << "Unsupported type conversion: " << name << "\n";

@@ -14,9 +14,7 @@ auto Parser::parse(std::vector<Token> tokens) -> std::unique_ptr<Program> {
 auto Parser::parseProgram() -> std::unique_ptr<Program> {
     // program name
     consume(TokenType::Keyword, "program");
-
     const std::string programName = peek().getValue();
-
     consume(TokenType::Identifier);
     consume(";");
 
@@ -35,7 +33,8 @@ auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
     //  - (             # params and return type explicitly defined
     //  - func          # params and return type inferred (void)
     //  - identifier {  # params and return type inferred (void)
-    // - Variable declaration starts with TODO: maybe implement
+    // TODO: maybe implement variable declaration globally
+    // - Variable declaration starts with
     //  - identifier    # variable declaration with explicit typing
 
     if (match(TokenType::Symbol, "(") || match(TokenType::Keyword, "func") ||
@@ -47,7 +46,7 @@ auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
     if (match(TokenType::Identifier)) { // the type of the variable
         return parseVariableDeclaration();
     }
-    */ 
+    */
 
     throwError("Parser: invalid statement");
 }
@@ -176,40 +175,6 @@ auto Parser::parseVariableDeclaration() -> std::unique_ptr<VariableDeclaration> 
     return std::make_unique<VariableDeclaration>(type, name, isPointer, isReference, std::move(initializer));
 }
 
-auto Parser::parseExpression() -> std::unique_ptr<AbstractNode> {
-    // Parse an expression by parsing a binary operation, which will recursively parse the expression
-    return parseBinaryOperation();
-}
-
-auto Parser::parseBinaryOperation(const int precedence) -> std::unique_ptr<AbstractNode> {
-    // Parse binary operations with precedence
-    // - Parse left-hand side
-    // - Parse operator
-    // - Parse right-hand side
-
-    auto lhs = parseUnaryExpression();
-
-    while (true) {
-        if (!isBinaryOperator(peek())) {
-            break;
-        }
-
-        const int currentPrecedence = getOperatorPrecedence(peek().getValue());
-        if (currentPrecedence < precedence) {
-            break;
-        }
-
-        std::string op = peek().getValue();
-        advance(); // Consume operator
-
-        auto rhs = parseBinaryOperation(currentPrecedence + 1);
-
-        lhs = std::make_unique<BinaryOperation>(std::move(lhs), op, std::move(rhs));
-    }
-
-    return lhs;
-}
-
 auto Parser::parseAssignment() -> std::unique_ptr<Assignment> {
     // [*]identifier = expression;
 
@@ -221,7 +186,6 @@ auto Parser::parseAssignment() -> std::unique_ptr<Assignment> {
 
     std::string variable = peek().getValue();
     consume(TokenType::Identifier);
-
     consume(TokenType::Symbol, "=");
 
     auto value = parseExpression();
@@ -241,8 +205,7 @@ auto Parser::parseFunctionCallExpr() -> std::unique_ptr<FunctionCall> {
     std::vector<std::unique_ptr<AbstractNode>> arguments;
     if (!match(TokenType::Symbol, ")")) {
         while (true) {
-            // todo: argument is not just any expression, its of type
-            //  - type[*|&] identifier
+            // argument right now is just a variable declaration with no initial value
             arguments.push_back(parseExpression());
             if (match(TokenType::Symbol, ",")) {
                 advance(); // Consume ","
@@ -320,6 +283,52 @@ auto Parser::parseReturnStatement() -> std::unique_ptr<ReturnStatement> {
     return std::make_unique<ReturnStatement>(std::move(value));
 }
 
+auto Parser::parseExpression() -> std::unique_ptr<AbstractNode> {
+    // Parse an expression by parsing a binary operation, which will recursively parse the expression
+    return parseBinaryOperation();
+}
+
+auto Parser::parseBinaryOperation(const int precedence) -> std::unique_ptr<AbstractNode> {
+    // Parse binary operations with precedence
+    // - Parse left-hand side
+    // - Parse operator
+    // - Parse right-hand side
+
+    auto lhs = parseUnaryExpression();
+
+    while (true) {
+        if (!isBinaryOperator(peek()))
+            break;
+
+        const int currentPrecedence = getOperatorPrecedence(peek().getValue());
+        if (currentPrecedence < precedence)
+            break;
+
+        std::string op = peek().getValue();
+        consume(TokenType::Symbol); // Consume the operator
+
+        auto rhs = parseBinaryOperation(currentPrecedence + 1);
+
+        lhs = std::make_unique<BinaryOperation>(std::move(lhs), op, std::move(rhs));
+    }
+
+    return lhs;
+}
+
+auto Parser::parseUnaryExpression() -> std::unique_ptr<AbstractNode> {
+    // Parse unary expressions, which can be
+    // - -expr
+    // - !expr
+
+    if (match(TokenType::Symbol, "-") || match(TokenType::Symbol, "!")) {
+        std::string op = peek().getValue();
+        advance();                             // Consume the operator
+        auto operand = parseUnaryExpression(); // Recursively parse the operand
+        return std::make_unique<UnaryOperation>(std::move(operand), op);
+    }
+    return parsePrimaryExpression(); // If no unary operator, parse a primary expression
+}
+
 auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
     // Parse primary expressions, which can be
     // - Literal (integer, float, char, string)
@@ -337,7 +346,7 @@ auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
     if (match(TokenType::Identifier)) {
         bool isReference = false;
         if (peek().getValue() == "&") {
-            advance(); // Consume "&"
+            advance();
             isReference = true;
         }
 
@@ -345,7 +354,7 @@ auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
         if (peekNext().getValue() == "(") {
             return parseFunctionCallExpr(); // Handle function call
         }
-        advance();
+        consume(TokenType::Identifier);
 
         return std::make_unique<Reference>(name, isReference); // Variable reference
     }
@@ -358,18 +367,4 @@ auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
     }
 
     throwError("Unexpected primary expression.");
-}
-
-auto Parser::parseUnaryExpression() -> std::unique_ptr<AbstractNode> {
-    // Parse unary expressions, which can be
-    // - -expr
-    // - !expr
-
-    if (match(TokenType::Symbol, "-") || match(TokenType::Symbol, "!")) {
-        std::string op = peek().getValue();
-        advance();                             // Consume the operator
-        auto operand = parseUnaryExpression(); // Recursively parse the operand
-        return std::make_unique<UnaryOperation>(std::move(operand), op);
-    }
-    return parsePrimaryExpression(); // If no unary operator, parse a primary expression
 }

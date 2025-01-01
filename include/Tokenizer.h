@@ -10,15 +10,17 @@ const std::set<std::string> KEYWORDS = {"if",       "else",   "while",   "return
                                         "continue", "import", "program", "func"};
 
 const std::set<char> SYMBOLS = {'+', '-', '*', '/', '=', '!', '<', '>', '(', ')', '{', '}',
-                                '[', ']', ';', ',', '.', ':', '&', '|', '^', '~', '.', '%'};
+                                '[', ']', ';', ',', '.', ':', '&', '|', '^', '~', '.', '%',
+                                '?', '@', '#', '$', '\\', '`'};
 
-const std::set<std::string> LONG_SYMBOLS = {"==", "!=", "<=", ">=", "&&", "||", "->"};
+const std::set<std::string> LONG_SYMBOLS = {"==", "!=", "<=", ">=", "&&", "||", "->", "<<", ">>", "++", "--"};
 
 const std::set<char> WHITESPACE = {' ', '\t', '\n', '\r', '\0'};
 
-const std::set<std::string> BINARY_OPERATORS = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||", "%"};
+const std::set<std::string> BINARY_OPERATORS = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "&&", "||", "%",
+                                                "<<", ">>", "&", "|", "^"};
 
-const std::set<std::string> UNARY_OPERATORS = {"+", "-", "!"};
+const std::set<std::string> UNARY_OPERATORS = {"+", "-", "!", "~", "++", "--"};
 
 enum class TokenType : std::uint8_t {
     Identifier, // Function names, variable names, etc.
