@@ -1,0 +1,18 @@
+# Ignore build directories
+cmake-build-default/
+
+# Ignore IDE and editor settings
+.clang-format
+.clang-tidy
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
+*~
