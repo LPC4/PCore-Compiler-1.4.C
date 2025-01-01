@@ -1,19 +1,19 @@
 program sinCalculator;
 
 (int iNum) -> float
-castIntToFloat {
+func castIntToFloat {
     float fNum = iNum;
     return fNum;
 }
 
 (float fNum) -> int
-castFloatToInt {
+func castFloatToInt {
     int iNum = fNum;
     return iNum;
 }
 
 (float x, int exponent) -> float
-power {
+func power {
     if exponent == 0 {
         return 1.0;
     }
@@ -21,7 +21,7 @@ power {
 }
 
 (int n) -> int
-factorial {
+func factorial {
     if n == 0 || n == 1 {
         return 1;
     }
@@ -48,7 +48,7 @@ func sin {
 }
 
 () -> int
-main {
+func main {
     float angle = 1.0; // Example angle in radians
     float sineValue = sin(angle);
 

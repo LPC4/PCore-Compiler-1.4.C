@@ -132,30 +132,32 @@ inline auto Parser::isBinaryOperator(const Token &peek) -> bool { return BINARY_
 
 inline auto Parser::getOperatorPrecedence(const std::string &op) -> int {
     static const std::unordered_map<std::string, int> PRECEDENCE_TABLE = {
-            {"=", 1},  // Assignment
-            {"||", 2}, // Logical OR
-            {"&&", 3}, // Logical AND
-            {"|", 4},  // Bitwise OR
-            {"^", 5},  // Bitwise XOR
-            {"&", 6},  // Bitwise AND
-            {"==", 7}, // Equality
-            {"!=", 7}, // Inequality
-            {"<", 8},  // Relational
-            {">", 8},  // Relational
-            {"<=", 8}, // Relational
-            {">=", 8}, // Relational
-            {"+", 9},  // Addition
-            {"-", 9},  // Subtraction
-            {"*", 10}, // Multiplication
-            {"/", 10}, // Division
-            {"%", 10}, // Modulo
-            {"-", 11}, // Unary negation (handled separately in unary parsing)
-            {"!", 11}, // Logical NOT (handled separately in unary parsing)
+        {"=", 1},   // Assignment
+        {"||", 2},  // Logical OR
+        {"&&", 3},  // Logical AND
+        {"|", 4},   // Bitwise OR
+        {"^", 5},   // Bitwise XOR
+        {"&", 6},   // Bitwise AND
+        {"==", 7},  // Equality
+        {"!=", 7},  // Inequality
+        {"<", 8},   // Relational
+        {">", 8},   // Relational
+        {"<=", 8},  // Relational
+        {">=", 8},  // Relational
+        {"<<", 9},  // Bitwise shift left
+        {">>", 9},  // Bitwise shift right
+        {"+", 10},  // Addition
+        {"-", 10},  // Subtraction
+        {"*", 11},  // Multiplication
+        {"/", 11},  // Division
+        {"%", 11},  // Modulo
+        {"-", 12},  // Unary negation (handled separately in unary parsing)
+        {"!", 12},  // Logical NOT (handled separately in unary parsing)
     };
 
-    const auto it = PRECEDENCE_TABLE.find(op);
-    if (it != PRECEDENCE_TABLE.end()) {
-        return it->second;
+    const auto iterator = PRECEDENCE_TABLE.find(op);
+    if (iterator != PRECEDENCE_TABLE.end()) {
+        return iterator->second;
     }
 
     throw std::runtime_error("invalid operator " + op);

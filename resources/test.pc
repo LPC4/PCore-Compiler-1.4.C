@@ -1,80 +1,8 @@
-program quadraticSolver;
-
-(int iNum) -> float
-castIntToFloat {
-    float fNum = iNum;
-    return fNum;
-}
-
-(float fNum) -> int
-castFloatToInt {
-    int iNum = fNum;
-    return iNum;
-}
-
-(float x) -> float
-sqrt {
-    if x < 0.0 {
-        // Return -1 for negative numbers as an error code
-        return -1.0;
-    }
-
-    float tolerance = 0.00001; // Tolerance for convergence
-    float guess = x / 2.0; // Initial guess
-    float diff = 0.0;
-
-    int shouldBreak = 0;
-
-    while shouldBreak == 0 {
-        float newGuess = (guess + x / guess) / 2.0;
-        diff = newGuess - guess;
-
-        if diff < 0.0 {
-            diff = -diff; // Absolute value of the difference
-        }
-
-        if diff <= tolerance {
-            shouldBreak = 1; // Set flag to break the loop
-        }
-
-        guess = newGuess;
-    }
-
-    return guess;
-}
-
-(float a, float b, float c) -> float
-calculateDiscriminant {
-    return b * b - 4.0 * a * c;
-}
-
-(float a, float b, float discriminant, int isPositiveRoot) -> float
-calculateRoot {
-    if isPositiveRoot == 1 {
-        return (-b + sqrt(discriminant)) / (2.0 * a);
-    }
-    return (-b - sqrt(discriminant)) / (2.0 * a);
-}
+program test;
 
 () -> int
 main {
-    float a = 2.0; // Coefficient of x²
-    float b = 3.0; // Coefficient of x
-    float c = -1; // Constant term
+    char c = 'c';
 
-    float discriminant = calculateDiscriminant(a, b, c);
-
-    if discriminant < 0.0 {
-        return -1; // No real roots
-    }
-
-    float root1 = calculateRoot(a, b, discriminant, 1);
-    float root2 = calculateRoot(a, b, discriminant, 0);
-
-    // Output the roots (for simplicity, cast to int for return value)
-    int intRoot1 = castFloatToInt(root1 * 1000.0);
-    int intRoot2 = castFloatToInt(root2 * 1000.0);
-
-    // Return only the first root (example) for demonstration purposes
-    return intRoot1; // Or return intRoot2 if you prefer
+    return 0;
 }
