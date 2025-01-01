@@ -14,10 +14,6 @@ class WhileLoop;
 class ReturnStatement;
 class ExpressionStatement;
 class Assignment;
-class MemoryAllocation;
-class MemoryDeallocation;
-class PointerAccess;
-class PointerAssignment;
 
 class Visitor {
 public:
@@ -37,8 +33,4 @@ public:
     virtual void visit(ReturnStatement &node) = 0;
     virtual void visit(ExpressionStatement &node) = 0;
     virtual void visit(Assignment &node) = 0;
-    virtual void visit(MemoryAllocation &node) = 0;
-    virtual void visit(MemoryDeallocation &node) = 0;
-    virtual void visit(PointerAccess &node) = 0;
-    virtual void visit(PointerAssignment &node) = 0;
 };

@@ -15,7 +15,24 @@ const static std::string NAME = "PCore Compiler";
 const static std::string VERSION = "1.4.0";
 const static std::string AUTHOR = "liamd";
 
-static ExitCode compile(const std::string &filepath) {
+static auto compile(const std::string &filepath) -> ExitCode;
+static void compileLLVMOutputAndRun();
+
+int main(int argc, char *argv[]) {
+    // todo: add command line arguments
+
+    std::cout << NAME << " v" << VERSION << " by " << AUTHOR << '\n';
+
+    const ExitCode exitCode = compile("../resources/test.pc");
+
+    if (exitCode == ExitCode::SUCCESS) {
+        compileLLVMOutputAndRun();
+    }
+
+    return static_cast<int>(exitCode);
+}
+
+static auto compile(const std::string &filepath) -> ExitCode {
     std::vector<Token> tokens;
 
     // Tokenize source code
@@ -62,8 +79,8 @@ static ExitCode compile(const std::string &filepath) {
     return ExitCode::SUCCESS;
 }
 
-void run() {
-    // Command to execute
+static void compileLLVMOutputAndRun() {
+    // Command to execute (compile LLVM IR using llc and clang, run the executable)
     const std::string command = "powershell.exe -Command "
                                 "\""
                                 "cd E:\\Utility\\code\\projects; "          // Change directory
@@ -78,18 +95,4 @@ void run() {
     } else {
         std::cerr << "Error executing commands. Exit code: " << result << '\n';
     }
-}
-
-int main(int argc, char *argv[]) {
-    // todo: add command line arguments
-
-    std::cout << NAME << " v" << VERSION << " by " << AUTHOR << '\n';
-
-    const ExitCode exitCode = compile("../resources/test.pc");
-
-    if (exitCode == ExitCode::SUCCESS) {
-        run();
-    }
-
-    return static_cast<int>(exitCode);
 }

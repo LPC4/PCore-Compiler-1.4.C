@@ -35,7 +35,7 @@ auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
     //  - (             # params and return type explicitly defined
     //  - func          # params and return type inferred (void)
     //  - identifier {  # params and return type inferred (void)
-    // - Variable declaration starts with
+    // - Variable declaration starts with TODO: maybe implement
     //  - identifier    # variable declaration with explicit typing
 
     if (match(TokenType::Symbol, "(") || match(TokenType::Keyword, "func") ||
@@ -43,9 +43,11 @@ auto Parser::parseDeclaration() -> std::unique_ptr<AbstractNode> {
 
         return parseFunctionDeclaration();
     }
+    /*
     if (match(TokenType::Identifier)) { // the type of the variable
         return parseVariableDeclaration();
     }
+    */ 
 
     throwError("Parser: invalid statement");
 }
@@ -126,7 +128,9 @@ auto Parser::parseStatement() -> std::unique_ptr<AbstractNode> {
     }
     // identifier( ... )
     if (match(TokenType::Identifier) && peekNext().getValue() == "(") {
-        return parseFunctionCall();
+        std::unique_ptr<AbstractNode> node = parseFunctionCallExpr();
+        consume(TokenType::Symbol, ";");
+        return node;
     }
     // [*]identifier = expression;
     if (match(TokenType::Identifier) && peekNext().getValue() == "=" ||
@@ -227,7 +231,7 @@ auto Parser::parseAssignment() -> std::unique_ptr<Assignment> {
     return std::make_unique<Assignment>(variable, std::move(value), isPointerDereference);
 }
 
-auto Parser::parseFunctionCall() -> std::unique_ptr<FunctionCall> {
+auto Parser::parseFunctionCallExpr() -> std::unique_ptr<FunctionCall> {
     // identifier([argument, ...])
 
     std::string functionName = peek().getValue();
@@ -304,11 +308,13 @@ auto Parser::parseReturnStatement() -> std::unique_ptr<ReturnStatement> {
 
     consume(TokenType::Keyword, "return");
 
-    std::unique_ptr<AbstractNode> value = nullptr;
+    std::unique_ptr<AbstractNode> value;
     if (!match(TokenType::Symbol, ";")) {
         value = parseExpression();
+    } else {
+        value = nullptr;
+        printf("return statement without expression\n");
     }
-
     consume(TokenType::Symbol, ";");
 
     return std::make_unique<ReturnStatement>(std::move(value));
@@ -337,7 +343,7 @@ auto Parser::parsePrimaryExpression() -> std::unique_ptr<AbstractNode> {
 
         std::string name = peek().getValue();
         if (peekNext().getValue() == "(") {
-            return parseFunctionCall(); // Handle function call
+            return parseFunctionCallExpr(); // Handle function call
         }
         advance();
 

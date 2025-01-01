@@ -274,7 +274,7 @@ public:
     void print(std::string indent) const override;
     void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
-
+/*
 // Memory allocation node
 class MemoryAllocation : public AbstractNode {
 public:
@@ -322,3 +322,4 @@ public:
     void print(std::string indent) const override;
     void accept(Visitor &visitor) override { visitor.visit(*this); }
 };
+*/

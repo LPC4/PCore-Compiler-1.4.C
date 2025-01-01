@@ -30,7 +30,7 @@ private:
     std::unique_ptr<AbstractNode>        parsePrimaryExpression();
     std::unique_ptr<AbstractNode>        parseUnaryExpression();
     std::unique_ptr<VariableDeclaration> parseVariableDeclaration();
-    std::unique_ptr<FunctionCall>        parseFunctionCall();
+    std::unique_ptr<FunctionCall>        parseFunctionCallExpr();
     std::unique_ptr<FunctionDeclaration> parseFunctionDeclaration();
     std::unique_ptr<AbstractNode>        parseBinaryOperation(int precedence = 0);
     std::unique_ptr<Assignment>          parseAssignment();

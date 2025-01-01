@@ -39,28 +39,11 @@ void Assignment::print(const std::string indent) const {
     value->print(indent + "  ");
 }
 
-void MemoryAllocation::print(const std::string indent) const {
-    std::cout << indent << "Memory Allocation: " << type << '\n';
-    sizeExpression->print(indent + "  ");
-}
-
-void MemoryDeallocation::print(const std::string indent) const {
-    std::cout << indent << "Memory Deallocation: " << this->pointer << '\n';
-}
-
-void PointerAccess::print(const std::string indent) const {
-    std::cout << indent << "Pointer Access" << '\n';
-    pointer->print(indent + "  ");
-}
-
-void PointerAssignment::print(const std::string indent) const {
-    std::cout << indent << "Pointer Assignment" << '\n';
-    pointer->print(indent + "  ");
-}
-
 void ReturnStatement::print(const std::string indent) const {
     std::cout << indent << "Return Statement" << '\n';
-    expression->print(indent + "  ");
+    if (expression) {
+        expression->print(indent + "  ");
+    }
 }
 
 void ExpressionStatement::print(const std::string indent) const {

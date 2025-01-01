@@ -1,0 +1,56 @@
+program sinCalculator;
+
+(int iNum) -> float
+castIntToFloat {
+    float fNum = iNum;
+    return fNum;
+}
+
+(float fNum) -> int
+castFloatToInt {
+    int iNum = fNum;
+    return iNum;
+}
+
+(float x, int exponent) -> float
+power {
+    if exponent == 0 {
+        return 1.0;
+    }
+    return x * power(x, exponent - 1);
+}
+
+(int n) -> int
+factorial {
+    if n == 0 || n == 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+(float x) -> float
+func sin {
+    float result = 0.0;
+    int terms = 10; // Number of terms in the Taylor series
+    int i = 0;
+
+    while i < terms {
+        float term = power(x, 2 * i + 1) / castIntToFloat(factorial(2 * i + 1));
+        if i % 2 == 0 {
+            result = result + term;
+        } else {
+            result = result - term;
+        }
+        i = i + 1;
+    }
+
+    return result;
+}
+
+() -> int
+main {
+    float angle = 1.0; // Example angle in radians
+    float sineValue = sin(angle);
+
+    return castFloatToInt(sineValue * 1000000.0);
+}
