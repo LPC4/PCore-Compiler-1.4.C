@@ -35,7 +35,7 @@
 - Function syntax:
   ```c++
   (params) -> return_type
-  func_name {
+  [func] func_name {
       body
   }
   ```
